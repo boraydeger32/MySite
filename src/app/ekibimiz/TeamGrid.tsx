@@ -24,7 +24,7 @@ const teamMembers: TeamMember[] = [
     id: 'member-1',
     name: 'Bora Aydeger',
     role: 'Kurucu',
-    bio: 'DevSpark Yazilim\'in kurucusu ve vizyoneri. 10 yillik yazilim sektoru deneyimiyle dijital donusum projelerine liderlik ediyor. Istanbul Teknik Universitesi Bilgisayar Muhendisligi mezunu olup, startup ekosisteminde aktif rol aliyor. Musteri odakli yaklasimi ve stratejik dusunce yapisiyla sirketin buyume yolculugunu sekillendiriyor.',
+    bio: 'DevSpark Yazilim\'in kurucusu ve vizyoneri. 10 yillik yazilim sektoru deneyimiyle dijital donusum projelerine liderlik ediyor. Yazılım Mühendisliği mezunu olup, startup ekosisteminde aktif rol alıyor. Musteri odakli yaklasimi ve stratejik dusunce yapisiyla sirketin buyume yolculugunu sekillendiriyor.',
     gradient: 'from-accent-orange via-accent-purple to-accent-blue',
     initials: 'BA',
     socials: [
