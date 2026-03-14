@@ -324,7 +324,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
             </span>
             <span className="flex items-center gap-1.5">
               <Clock className="h-4 w-4" />
-              {post.readingTime.text}
+              {Math.ceil(post.readingTime.minutes)} dk okuma
             </span>
           </div>
         </div>
@@ -437,7 +437,7 @@ export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
                       </span>
                       <span className="flex items-center gap-1.5">
                         <Clock className="h-3.5 w-3.5" />
-                        {related.readingTime.text}
+                        {Math.ceil(related.readingTime.minutes)} dk okuma
                       </span>
                     </div>
 

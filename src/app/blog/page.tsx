@@ -64,7 +64,7 @@ export default function BlogPage() {
               category: post.frontmatter.category,
               coverColor: post.frontmatter.coverColor,
               author: post.frontmatter.author,
-              readingTime: post.readingTime.text,
+              readingTime: `${Math.ceil(post.readingTime.minutes)} dk okuma`,
             }))}
             categories={categories}
           />
