@@ -23,7 +23,7 @@ const teamMembers: TeamMember[] = [
   {
     id: 'member-1',
     name: 'Bora Aydeger',
-    role: 'Kurucu & CEO',
+    role: 'Kurucu',
     bio: 'DevSpark Yazilim\'in kurucusu ve vizyoneri. 10 yillik yazilim sektoru deneyimiyle dijital donusum projelerine liderlik ediyor. Istanbul Teknik Universitesi Bilgisayar Muhendisligi mezunu olup, startup ekosisteminde aktif rol aliyor. Musteri odakli yaklasimi ve stratejik dusunce yapisiyla sirketin buyume yolculugunu sekillendiriyor.',
     gradient: 'from-accent-orange via-accent-purple to-accent-blue',
     initials: 'BA',
@@ -36,7 +36,7 @@ const teamMembers: TeamMember[] = [
   {
     id: 'member-2',
     name: 'Huseyin Kaplan',
-    role: 'CTO',
+    role: 'Kurucu',
     bio: 'Teknoloji mimarisinden sorumlu bas muhendis. Full-stack gelistirme, bulut altyapisi ve sistem tasarimi konularinda derin uzmanligi bulunuyor. Daha once buyuk olcekli fintech projelerinde gorev yapti. Ekibin teknik gelisimini yonlendiriyor ve yeni teknolojilerin projelere entegrasyonunu sagliyor.',
     gradient: 'from-accent-blue via-accent-purple to-accent-orange',
     initials: 'HK',
@@ -49,47 +49,10 @@ const teamMembers: TeamMember[] = [
   {
     id: 'member-3',
     name: 'Metin Bektemur',
-    role: 'Proje Yoneticisi',
+    role: 'Kurucu',
     bio: 'Agile ve Scrum metodolojilerinde sertifikali proje yoneticisi. Musteri iletisimi, zaman planlama ve kaynak yonetimi konularinda uzman. Buyuk olcekli projelerin zamaninda ve butce dahilinde teslim edilmesini sagliyor. Ekip motivasyonu ve verimli calisma ortami olusturma konusunda tutkulu.',
     gradient: 'from-accent-purple via-accent-orange to-accent-blue',
     initials: 'MB',
-    socials: [
-      { platform: 'linkedin', url: '#' },
-      { platform: 'github', url: '#' },
-      { platform: 'twitter', url: '#' },
-    ],
-  },
-  {
-    id: 'member-4',
-    name: 'Ayse Korkmaz',
-    role: 'UI/UX Tasarimci',
-    bio: 'Kullanici deneyimi tasarimi ve arayuz gelistirme konusunda 7 yillik deneyime sahip. Figma, Adobe Creative Suite ve modern tasarim araclarinda uzman. Kullanici arastirmasi, prototipleme ve tasarim sistemi olusturma konularinda genis bilgi birikimine sahip. Her projede estetik ve islevseligi bir araya getiriyor.',
-    gradient: 'from-accent-orange via-accent-blue to-accent-purple',
-    initials: 'AK',
-    socials: [
-      { platform: 'linkedin', url: '#' },
-      { platform: 'twitter', url: '#' },
-    ],
-  },
-  {
-    id: 'member-5',
-    name: 'Emre Sahin',
-    role: 'Full-Stack Gelistirici',
-    bio: 'React, Next.js, Node.js ve TypeScript konularinda uzman full-stack gelistirici. Performans optimizasyonu, temiz kod yazimi ve test odakli gelistirme pratiklerini benimsemis. Acik kaynak projelere aktif katkilar sagliyor. E-ticaret ve SaaS platformlarinda genis deneyime sahip.',
-    gradient: 'from-accent-blue via-accent-orange to-accent-purple',
-    initials: 'ES',
-    socials: [
-      { platform: 'linkedin', url: '#' },
-      { platform: 'github', url: '#' },
-    ],
-  },
-  {
-    id: 'member-6',
-    name: 'Deniz Aksoy',
-    role: 'DevOps Muhendisi',
-    bio: 'CI/CD pipeline\'lari, bulut altyapisi ve konteyner orkestrasyonu konularinda uzman. AWS, Docker ve Kubernetes sertifikalarina sahip. Otomasyon ve altyapi guvenligi konularinda genis deneyim. Sistemlerin yuksek erisilebilirlik ve olceklenebilirlik ile calismasini sagliyor.',
-    gradient: 'from-accent-purple via-accent-blue to-accent-orange',
-    initials: 'DA',
     socials: [
       { platform: 'linkedin', url: '#' },
       { platform: 'github', url: '#' },

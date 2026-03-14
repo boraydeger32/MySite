@@ -23,7 +23,7 @@ const teamMembers: TeamMember[] = [
   {
     id: 'member-1',
     name: 'Bora Aydeger',
-    role: 'Kurucu & CEO',
+    role: 'Kurucu',
     gradient: 'from-accent-orange via-accent-purple to-accent-blue',
     initials: 'BA',
     socials: [
@@ -35,7 +35,7 @@ const teamMembers: TeamMember[] = [
   {
     id: 'member-2',
     name: 'Huseyin Kaplan',
-    role: 'CTO',
+    role: 'Kurucu',
     gradient: 'from-accent-blue via-accent-purple to-accent-orange',
     initials: 'HK',
     socials: [
@@ -47,43 +47,9 @@ const teamMembers: TeamMember[] = [
   {
     id: 'member-3',
     name: 'Metin Bektemur',
-    role: 'Proje Yoneticisi',
+    role: 'Kurucu',
     gradient: 'from-accent-purple via-accent-orange to-accent-blue',
     initials: 'MB',
-    socials: [
-      { platform: 'linkedin', url: '#' },
-      { platform: 'github', url: '#' },
-      { platform: 'twitter', url: '#' },
-    ],
-  },
-  {
-    id: 'member-4',
-    name: 'Ayse Korkmaz',
-    role: 'UI/UX Tasarimci',
-    gradient: 'from-accent-orange via-accent-blue to-accent-purple',
-    initials: 'AK',
-    socials: [
-      { platform: 'linkedin', url: '#' },
-      { platform: 'twitter', url: '#' },
-    ],
-  },
-  {
-    id: 'member-5',
-    name: 'Emre Sahin',
-    role: 'Full-Stack Gelistirici',
-    gradient: 'from-accent-blue via-accent-orange to-accent-purple',
-    initials: 'ES',
-    socials: [
-      { platform: 'linkedin', url: '#' },
-      { platform: 'github', url: '#' },
-    ],
-  },
-  {
-    id: 'member-6',
-    name: 'Deniz Aksoy',
-    role: 'DevOps Muhendisi',
-    gradient: 'from-accent-purple via-accent-blue to-accent-orange',
-    initials: 'DA',
     socials: [
       { platform: 'linkedin', url: '#' },
       { platform: 'github', url: '#' },
