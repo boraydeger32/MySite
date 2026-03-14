@@ -1,6 +1,8 @@
 import type { Metadata } from 'next';
 import { Bricolage_Grotesque, Plus_Jakarta_Sans } from 'next/font/google';
 import { Toaster } from 'sonner';
+import Navbar from '@/components/layout/Navbar';
+import Footer from '@/components/layout/Footer';
 import ScrollProgressBar from '@/components/ui/ScrollProgressBar';
 import CustomCursor from '@/components/ui/CustomCursor';
 import BackToTopButton from '@/components/ui/BackToTopButton';
@@ -126,7 +128,9 @@ export default function RootLayout({
         <LoadingScreen />
         <ScrollProgressBar />
         <CustomCursor />
-        {children}
+        <Navbar />
+        <main className="min-h-screen">{children}</main>
+        <Footer />
         <BackToTopButton />
         <Toaster
           theme="dark"
