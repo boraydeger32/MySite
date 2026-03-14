@@ -37,7 +37,7 @@ const teamMembers: TeamMember[] = [
     id: 'member-2',
     name: 'Huseyin Kaplan',
     role: 'Kurucu',
-    bio: 'Teknoloji mimarisinden sorumlu bas muhendis. Full-stack gelistirme, bulut altyapisi ve sistem tasarimi konularinda derin uzmanligi bulunuyor. Daha once buyuk olcekli fintech projelerinde gorev yapti. Ekibin teknik gelisimini yonlendiriyor ve yeni teknolojilerin projelere entegrasyonunu sagliyor.',
+    bio: 'Agile ve Scrum metodolojilerinde sertifikali proje yoneticisi. Musteri iletisimi, zaman planlama ve kaynak yonetimi konularinda uzman. Buyuk olcekli projelerin zamaninda ve butce dahilinde teslim edilmesini sagliyor. Ekip motivasyonu ve verimli calisma ortami olusturma konusunda tutkulu.',
     gradient: 'from-accent-blue via-accent-purple to-accent-orange',
     initials: 'HK',
     socials: [
@@ -50,7 +50,7 @@ const teamMembers: TeamMember[] = [
     id: 'member-3',
     name: 'Metin Bektemur',
     role: 'Kurucu',
-    bio: 'Agile ve Scrum metodolojilerinde sertifikali proje yoneticisi. Musteri iletisimi, zaman planlama ve kaynak yonetimi konularinda uzman. Buyuk olcekli projelerin zamaninda ve butce dahilinde teslim edilmesini sagliyor. Ekip motivasyonu ve verimli calisma ortami olusturma konusunda tutkulu.',
+    bio: 'Teknoloji mimarisinden sorumlu bas muhendis. Full-stack gelistirme, bulut altyapisi ve sistem tasarimi konularinda derin uzmanligi bulunuyor. Daha once buyuk olcekli fintech projelerinde gorev yapti. Ekibin teknik gelisimini yonlendiriyor ve yeni teknolojilerin projelere entegrasyonunu sagliyor.',
     gradient: 'from-accent-purple via-accent-orange to-accent-blue',
     initials: 'MB',
     socials: [
