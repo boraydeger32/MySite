@@ -1,6 +1,10 @@
 import type { Metadata } from 'next';
 import { Bricolage_Grotesque, Plus_Jakarta_Sans } from 'next/font/google';
 import { Toaster } from 'sonner';
+import ScrollProgressBar from '@/components/ui/ScrollProgressBar';
+import CustomCursor from '@/components/ui/CustomCursor';
+import BackToTopButton from '@/components/ui/BackToTopButton';
+import LoadingScreen from '@/components/ui/LoadingScreen';
 import '@/styles/globals.css';
 
 const bricolage = Bricolage_Grotesque({
@@ -119,7 +123,11 @@ export default function RootLayout({
         />
       </head>
       <body className="font-body antialiased">
+        <LoadingScreen />
+        <ScrollProgressBar />
+        <CustomCursor />
         {children}
+        <BackToTopButton />
         <Toaster
           theme="dark"
           richColors
