@@ -94,7 +94,7 @@ export default function SuperAdminGirisPage() {
 
       // Verify user has super_admin role
       const { data: profile, error: profileError } = await supabase
-        .from('profiles')
+        .from('user_profiles')
         .select('role')
         .eq('id', authData.user.id)
         .single();

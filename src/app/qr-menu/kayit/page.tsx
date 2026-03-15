@@ -171,10 +171,8 @@ export default function QRMenuKayitPage() {
           .insert({
             id: userId,
             full_name: data.fullName,
-            email: data.email,
             phone: data.phone || null,
-            restaurant_id: restaurant.id,
-            role: 'owner',
+            role: 'restaurant_owner',
           });
 
         if (profileError) {
