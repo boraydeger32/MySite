@@ -804,8 +804,8 @@
             ]
           },
           "status": "completed",
-          "notes": "Created super admin dashboard home page with 5 platform KPI cards (active restaurants, new registrations, total orders, platform revenue, active users), monthly growth line chart (restaurants + orders dual axis), plan distribution pie chart (Ucretsiz/Starter/Pro/Enterprise), and recent activity feed with timeline UI and 8 mock log entries. All TypeScript checks pass.",
-          "updated_at": "2026-03-15T14:00:00.000Z"
+          "notes": "Created super admin dashboard home page (src/app/super-admin/dashboard/page.tsx) with: 5 platform KPI cards (active restaurants, new registrations, total orders, platform revenue, active users) using existing KPICard component; monthly growth line chart with dual Y-axes (restaurants + orders); plan distribution pie chart (Ucretsiz/Starter/Pro/Enterprise) with custom labels and tooltip; recent activity feed with timeline UI and 8 categorized mock log entries (registration, upgrade, alert, cancellation, config). All TypeScript checks pass. Commit: b3ebda2",
+          "updated_at": "2026-03-15T15:16:03.253254+00:00"
         },
         {
           "id": "subtask-8-3",
@@ -829,7 +829,9 @@
               "Suspend toggle works"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created RestaurantTable component (636 lines) with sortable columns (name, owner, plan, status, created_at, last_active, order_count), sort direction toggle, plan/status badges with color coding, action buttons (view, edit, suspend/activate, delete) + dropdown with impersonate. Created restoranlar page (938 lines) with search bar, plan/status filter dropdowns, stats summary cards, CSV export, refresh, delete/suspend confirmation dialogs, Supabase integration with mock fallback, impersonate via sessionStorage. TypeScript compiles with 0 errors.",
+          "updated_at": "2026-03-15T16:00:00.000000+00:00"
         },
         {
           "id": "subtask-8-4",
@@ -1235,12 +1237,12 @@
   "planStatus": "in_progress",
   "xstateState": "coding",
   "executionPhase": "coding",
-  "updated_at": "2026-03-15T15:11:35.649Z",
+  "updated_at": "2026-03-15T15:16:38.284Z",
   "lastEvent": {
     "eventId": "6266615c-9e3e-4f6a-aa92-83b7224f6aa1",
     "sequence": 0,
     "type": "PLANNING_COMPLETE",
     "timestamp": "2026-03-15T12:51:59.989792+00:00"
   },
-  "last_updated": "2026-03-15T15:06:08.064714+00:00"
+  "last_updated": "2026-03-15T15:16:03.253262+00:00"
 }

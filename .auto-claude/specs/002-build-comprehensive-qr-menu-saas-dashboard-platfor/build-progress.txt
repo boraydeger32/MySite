@@ -207,3 +207,40 @@ Session N (Builder - subtask-7-2):
   * Verification: TypeScript compiles with 0 errors (npx tsc --noEmit)
   * No console.log debugging statements
   * Updated implementation_plan.json: subtask-7-2 status -> completed
+
+Session N (Builder - subtask-8-3):
+- [COMPLETED] subtask-8-3: Create RestaurantTable component and restaurant management page
+  * Created src/components/super-admin/RestaurantTable.tsx (636 lines):
+    - Sortable data table with 7 columns: name (with logo/slug), owner (name + email),
+      plan (colored badges: Ucretsiz/Starter/Pro/Enterprise), status (dot + label:
+      Aktif/Askiya Alinmis/Silinmis), registration date, last active (relative time),
+      order count (Turkish locale)
+    - Sort by any column with direction toggle (asc/desc), active sort indicator (blue)
+    - Action buttons per row: view (eye), edit (pencil), suspend/activate toggle,
+      delete (trash) - visible on desktop as inline buttons
+    - Dropdown menu (MoreHorizontal) with all actions + "Restoran Adina Giris" impersonate
+    - Mobile responsive: hides owner, dates, orders columns on small screens
+    - Empty state with Building2 icon and "Restoran bulunamadi" message
+    - Footer with total count and current sort info
+    - AnimatePresence for row enter/exit animations
+    - Exported RestaurantRow interface and types for parent page reuse
+    - Uses Shadcn Table, DropdownMenu components
+  * Created src/app/super-admin/dashboard/restoranlar/page.tsx (938 lines):
+    - Page header: "Restoran Yonetimi" with description
+    - Action buttons: Refresh (with spin animation), CSV export, "Yeni Restoran"
+    - Stats summary: 4 cards (Toplam, Aktif, Askida, Toplam Siparis)
+    - Search bar with X-clear button, live filtering by name/slug/owner/email
+    - Filter dropdowns: Plan (Tum Planlar + 4 plans), Status (Tum Durumlar + 3 statuses)
+    - Clear filters button (appears when filters are active)
+    - RestaurantTable with all mock restaurants (12 entries with varied plans/statuses)
+    - Supabase integration: fetches restaurants with user_profiles join, falls back to mock
+    - Delete confirmation dialog with warning message
+    - Suspend/activate confirmation dialog with contextual messaging
+    - Impersonate ("Restoran Adina Giris"): stores scoped session in sessionStorage,
+      navigates to /qr-menu/dashboard
+    - CSV export with UTF-8 BOM for Turkish character support
+    - Loading skeleton state during data fetch
+    - All Turkish UI text, glassmorphism dark theme, Framer Motion animations
+  * Verification: TypeScript compiles with 0 errors (npx tsc --noEmit)
+  * No console.log debugging statements
+  * Updated implementation_plan.json: subtask-8-3 status -> completed
