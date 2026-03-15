@@ -181,20 +181,21 @@ function CartItemRow({
             <button
               type="button"
               onClick={() => decrementQuantity(item.cartId)}
-              className="flex h-7 w-7 items-center justify-center rounded-full transition-colors"
+              className="flex h-8 w-8 min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors"
               style={{
                 backgroundColor: `${textColor}10`,
                 color: textColor,
                 border: `1px solid ${textColor}15`,
               }}
-              aria-label="Adet azalt"
+              aria-label={`${item.name} adet azalt`}
             >
-              <Minus className="h-3 w-3" />
+              <Minus className="h-3 w-3" aria-hidden="true" />
             </button>
 
             <span
               className="min-w-[1.25rem] text-center text-sm font-bold"
               style={{ color: textColor }}
+              aria-label={`${item.quantity} adet`}
             >
               {item.quantity}
             </span>
@@ -202,14 +203,14 @@ function CartItemRow({
             <button
               type="button"
               onClick={() => incrementQuantity(item.cartId)}
-              className="flex h-7 w-7 items-center justify-center rounded-full transition-colors"
+              className="flex h-8 w-8 min-h-[44px] min-w-[44px] items-center justify-center rounded-full transition-colors"
               style={{
                 backgroundColor: primaryColor,
                 color: '#fff',
               }}
-              aria-label="Adet artir"
+              aria-label={`${item.name} adet artir`}
             >
-              <Plus className="h-3 w-3" />
+              <Plus className="h-3 w-3" aria-hidden="true" />
             </button>
           </div>
 

@@ -982,11 +982,11 @@ export default function MasaMenuPage() {
 
       // Clear cart on success
       clearCart();
-      toast.success('Sipairisiniz alindi! Afiyet olsun.');
+      toast.success('Siparisiniz alindi! Afiyet olsun.');
     } catch {
       // For demo purposes, still clear cart and show success
       clearCart();
-      toast.success('Sipairisiniz alindi! Afiyet olsun.');
+      toast.success('Siparisiniz alindi! Afiyet olsun.');
     } finally {
       setIsSubmitting(false);
     }
@@ -1146,7 +1146,7 @@ export default function MasaMenuPage() {
       {/* Menu Content */}
       {/* ================================================================== */}
 
-      <main className="px-4 pt-4">
+      <main className="px-4 pt-4" role="main" aria-label="Menu listesi">
         {filteredCategories.length === 0 ? (
           // Empty state
           <div className="flex flex-col items-center justify-center py-16">
@@ -1276,11 +1276,15 @@ export default function MasaMenuPage() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            role="status"
+            aria-live="polite"
+            aria-label="Siparis gonderiliyor"
           >
             <div className="flex flex-col items-center gap-4">
               <Loader2
                 className="h-10 w-10 animate-spin"
                 style={{ color: primaryColor }}
+                aria-hidden="true"
               />
               <p
                 className="text-sm font-semibold"

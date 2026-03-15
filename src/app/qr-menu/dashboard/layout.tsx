@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useMemo, useCallback } from 'react';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import { toast } from 'sonner';
 import {
   Bell,
   ChevronRight,
@@ -21,6 +22,7 @@ import {
   Megaphone,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 import Sidebar from '@/components/qr-menu/Sidebar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
@@ -95,6 +97,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }>) {
   const pathname = usePathname();
+  const router = useRouter();
   const [notificationCount] = useState(3);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
@@ -112,6 +115,19 @@ export default function DashboardLayout({
     [pathname]
   );
 
+  const handleLogout = useCallback(async () => {
+    try {
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      toast.success('Cikis yapildi.');
+      router.push('/qr-menu/giris');
+    } catch {
+      toast.error('Cikis yapilamadi.', {
+        description: 'Lutfen tekrar deneyiniz.',
+      });
+    }
+  }, [router]);
+
   const breadcrumbs: BreadcrumbItem[] = useMemo(() => {
     const segments = pathname
       .replace('/qr-menu/', '')
@@ -127,6 +143,14 @@ export default function DashboardLayout({
 
   return (
     <div className="min-h-screen overflow-x-hidden bg-bg-dark">
+      {/* Skip to main content link for keyboard navigation */}
+      <a
+        href="#dashboard-main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-accent-orange focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:outline-none"
+      >
+        Ana icerige atla
+      </a>
+
       {/* Desktop Sidebar - hidden on mobile via Sidebar's own responsive logic */}
       <div className="hidden lg:block">
         <Sidebar />
@@ -135,7 +159,10 @@ export default function DashboardLayout({
       {/* Main content area - offset for desktop sidebar */}
       <div className="lg:pl-64 transition-all duration-300">
         {/* Header bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-white/10 bg-bg-dark/95 px-4 backdrop-blur-xl lg:px-6">
+        <header
+          className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-white/10 bg-bg-dark/95 px-4 backdrop-blur-xl lg:px-6"
+          role="banner"
+        >
           {/* Mobile hamburger - opens Sheet with sidebar navigation */}
           <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
             <SheetTrigger asChild>
@@ -162,7 +189,10 @@ export default function DashboardLayout({
               </SheetHeader>
 
               {/* Mobile navigation items - 44px min touch targets */}
-              <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
+              <nav
+                className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4"
+                aria-label="Dashboard navigasyonu"
+              >
                 {MOBILE_NAV_ITEMS.map((item, index) => {
                   const active = isActive(item.href);
                   const Icon = item.icon;
@@ -193,6 +223,7 @@ export default function DashboardLayout({
                               ? 'text-accent-orange'
                               : 'text-text-muted'
                           )}
+                          aria-hidden="true"
                         />
                         {item.label}
                       </Link>
@@ -208,14 +239,17 @@ export default function DashboardLayout({
                   onClick={closeMobileSheet}
                   className="flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-muted transition-colors hover:bg-white/5 hover:text-text-main"
                 >
-                  <User className="h-5 w-5 shrink-0" />
+                  <User className="h-5 w-5 shrink-0" aria-hidden="true" />
                   Profil
                 </Link>
                 <button
                   className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-muted transition-colors hover:bg-white/5 hover:text-red-400"
-                  onClick={closeMobileSheet}
+                  onClick={() => {
+                    closeMobileSheet();
+                    handleLogout();
+                  }}
                 >
-                  <LogOut className="h-5 w-5 shrink-0" />
+                  <LogOut className="h-5 w-5 shrink-0" aria-hidden="true" />
                   Cikis Yap
                 </button>
               </div>
@@ -227,29 +261,31 @@ export default function DashboardLayout({
             className="hidden items-center gap-1.5 text-sm sm:flex"
             aria-label="Breadcrumb"
           >
-            {breadcrumbs.map((crumb, index) => (
-              <div key={crumb.href} className="flex items-center gap-1.5">
-                {index > 0 && (
-                  <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
-                )}
-                {crumb.isLast ? (
-                  <span className="font-medium text-text-main">
-                    {crumb.label}
-                  </span>
-                ) : (
-                  <Link
-                    href={crumb.href}
-                    className="text-text-muted transition-colors hover:text-text-main"
-                  >
-                    {crumb.label}
-                  </Link>
-                )}
-              </div>
-            ))}
+            <ol className="flex items-center gap-1.5">
+              {breadcrumbs.map((crumb, index) => (
+                <li key={crumb.href} className="flex items-center gap-1.5">
+                  {index > 0 && (
+                    <ChevronRight className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
+                  )}
+                  {crumb.isLast ? (
+                    <span className="font-medium text-text-main" aria-current="page">
+                      {crumb.label}
+                    </span>
+                  ) : (
+                    <Link
+                      href={crumb.href}
+                      className="text-text-muted transition-colors hover:text-text-main"
+                    >
+                      {crumb.label}
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ol>
           </nav>
 
           {/* Mobile breadcrumb - simplified, only show current page */}
-          <span className="text-sm font-medium text-text-main sm:hidden">
+          <span className="text-sm font-medium text-text-main sm:hidden" aria-hidden="true">
             {breadcrumbs[breadcrumbs.length - 1]?.label}
           </span>
 
@@ -260,9 +296,12 @@ export default function DashboardLayout({
               className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-white/10 bg-white/5 text-text-muted transition-colors hover:border-accent-orange/50 hover:text-text-main sm:h-9 sm:w-9 sm:min-h-0 sm:min-w-0"
               aria-label={`Bildirimler - ${notificationCount} yeni`}
             >
-              <Bell className="h-[18px] w-[18px]" />
+              <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
               {notificationCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent-orange px-1 text-[10px] font-bold leading-none text-white">
+                <span
+                  className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent-orange px-1 text-[10px] font-bold leading-none text-white"
+                  aria-hidden="true"
+                >
                   {notificationCount}
                 </span>
               )}
@@ -274,9 +313,10 @@ export default function DashboardLayout({
                 <button
                   className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 p-1.5 transition-colors hover:border-accent-orange/50 focus:outline-none focus:ring-2 focus:ring-accent-orange/50"
                   aria-label="Kullanici menusu"
+                  aria-haspopup="true"
                 >
                   <Avatar className="h-7 w-7">
-                    <AvatarImage src="" alt="Kullanici" />
+                    <AvatarImage src="" alt="" />
                     <AvatarFallback className="bg-accent-orange/10 text-xs font-semibold text-accent-orange">
                       RS
                     </AvatarFallback>
@@ -299,7 +339,7 @@ export default function DashboardLayout({
                   className="cursor-pointer text-text-muted focus:bg-white/5 focus:text-text-main"
                 >
                   <Link href="/qr-menu/dashboard/ayarlar">
-                    <User className="mr-2 h-4 w-4" />
+                    <User className="mr-2 h-4 w-4" aria-hidden="true" />
                     Profil
                   </Link>
                 </DropdownMenuItem>
@@ -308,19 +348,22 @@ export default function DashboardLayout({
                   className="cursor-pointer text-text-muted focus:bg-white/5 focus:text-text-main"
                 >
                   <Link href="/qr-menu/dashboard/ayarlar">
-                    <Settings className="mr-2 h-4 w-4" />
+                    <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
                     Ayarlar
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer text-text-muted focus:bg-white/5 focus:text-text-main"
                 >
-                  <ExternalLink className="mr-2 h-4 w-4" />
+                  <ExternalLink className="mr-2 h-4 w-4" aria-hidden="true" />
                   Menuyu Goruntule
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/10" />
-                <DropdownMenuItem className="cursor-pointer text-red-400 focus:bg-white/5 focus:text-red-400">
-                  <LogOut className="mr-2 h-4 w-4" />
+                <DropdownMenuItem
+                  className="cursor-pointer text-red-400 focus:bg-white/5 focus:text-red-400"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
                   Cikis Yap
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -330,11 +373,14 @@ export default function DashboardLayout({
 
         {/* Page content with entry animation */}
         <motion.main
+          id="dashboard-main-content"
           key={pathname}
           variants={contentEntryVariants}
           initial="hidden"
           animate="visible"
           className="p-4 lg:p-6"
+          role="main"
+          aria-label="Dashboard icerik alani"
         >
           {children}
         </motion.main>

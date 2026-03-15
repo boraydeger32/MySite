@@ -5,14 +5,14 @@ import LoadingScreen from '@/components/ui/LoadingScreen';
 import '@/styles/globals.css';
 
 const bricolage = Bricolage_Grotesque({
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'],
   variable: '--font-bricolage',
   display: 'swap',
   weight: ['400', '600', '700', '800'],
 });
 
 const jakarta = Plus_Jakarta_Sans({
-  subsets: ['latin'],
+  subsets: ['latin', 'latin-ext'],
   variable: '--font-jakarta',
   display: 'swap',
   weight: ['400', '500', '600', '700'],

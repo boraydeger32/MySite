@@ -87,7 +87,7 @@ export default function AdminDashboardLayout({
     [pathname]
   );
 
-  const handleLogout = async () => {
+  const handleLogout = useCallback(async () => {
     try {
       const supabase = createClient();
       await supabase.auth.signOut();
@@ -98,7 +98,7 @@ export default function AdminDashboardLayout({
         description: 'Lutfen tekrar deneyiniz.',
       });
     }
-  };
+  }, [router]);
 
   const breadcrumbs: BreadcrumbItem[] = useMemo(() => {
     const segments = pathname
@@ -115,6 +115,14 @@ export default function AdminDashboardLayout({
 
   return (
     <div className="min-h-screen bg-bg-dark">
+      {/* Skip to main content link for keyboard navigation */}
+      <a
+        href="#admin-main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-accent-blue focus:px-4 focus:py-2 focus:text-sm focus:font-semibold focus:text-white focus:outline-none"
+      >
+        Ana icerige atla
+      </a>
+
       {/* Desktop Sidebar - hidden on mobile via AdminSidebar's own responsive logic */}
       <div className="hidden lg:block">
         <AdminSidebar />
@@ -123,12 +131,15 @@ export default function AdminDashboardLayout({
       {/* Main content area - offset for desktop sidebar */}
       <div className="lg:pl-64 transition-all duration-300">
         {/* Header bar */}
-        <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-white/10 bg-bg-dark/95 px-4 backdrop-blur-xl lg:px-6">
+        <header
+          className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-white/10 bg-bg-dark/95 px-4 backdrop-blur-xl lg:px-6"
+          role="banner"
+        >
           {/* Mobile hamburger - opens Sheet with sidebar navigation */}
           <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
             <SheetTrigger asChild>
               <button
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-text-muted transition-colors hover:border-accent-blue/50 hover:text-text-main lg:hidden"
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-white/10 bg-white/5 text-text-muted transition-colors hover:border-accent-blue/50 hover:text-text-main lg:hidden"
                 aria-label="Navigasyon menusunu ac"
               >
                 <Menu className="h-5 w-5" />
@@ -149,8 +160,11 @@ export default function AdminDashboardLayout({
                 </SheetTitle>
               </SheetHeader>
 
-              {/* Mobile navigation items */}
-              <nav className="flex flex-1 flex-col gap-1 px-3 py-4">
+              {/* Mobile navigation items - 44px min touch targets */}
+              <nav
+                className="flex flex-1 flex-col gap-1 px-3 py-4"
+                aria-label="Admin navigasyonu"
+              >
                 {MOBILE_NAV_ITEMS.map((item) => {
                   const active = isActive(item.href);
                   const Icon = item.icon;
@@ -161,7 +175,7 @@ export default function AdminDashboardLayout({
                       href={item.href}
                       onClick={closeMobileSheet}
                       className={cn(
-                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                        'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                         active
                           ? 'bg-accent-blue/10 text-accent-blue'
                           : 'text-text-muted hover:bg-white/5 hover:text-text-main'
@@ -175,6 +189,7 @@ export default function AdminDashboardLayout({
                             ? 'text-accent-blue'
                             : 'text-text-muted'
                         )}
+                        aria-hidden="true"
                       />
                       {item.label}
                     </Link>
@@ -182,16 +197,16 @@ export default function AdminDashboardLayout({
                 })}
               </nav>
 
-              {/* Mobile bottom actions */}
+              {/* Mobile bottom actions - 44px min touch targets */}
               <div className="border-t border-white/10 px-3 py-3">
                 <button
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-muted transition-colors hover:bg-white/5 hover:text-red-400"
+                  className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-muted transition-colors hover:bg-white/5 hover:text-red-400"
                   onClick={() => {
                     closeMobileSheet();
                     handleLogout();
                   }}
                 >
-                  <LogOut className="h-5 w-5 shrink-0" />
+                  <LogOut className="h-5 w-5 shrink-0" aria-hidden="true" />
                   Cikis Yap
                 </button>
               </div>
@@ -203,42 +218,47 @@ export default function AdminDashboardLayout({
             className="hidden items-center gap-1.5 text-sm sm:flex"
             aria-label="Breadcrumb"
           >
-            {breadcrumbs.map((crumb, index) => (
-              <div key={crumb.href} className="flex items-center gap-1.5">
-                {index > 0 && (
-                  <ChevronRight className="h-3.5 w-3.5 text-text-muted" />
-                )}
-                {crumb.isLast ? (
-                  <span className="font-medium text-text-main">
-                    {crumb.label}
-                  </span>
-                ) : (
-                  <Link
-                    href={crumb.href}
-                    className="text-text-muted transition-colors hover:text-text-main"
-                  >
-                    {crumb.label}
-                  </Link>
-                )}
-              </div>
-            ))}
+            <ol className="flex items-center gap-1.5">
+              {breadcrumbs.map((crumb, index) => (
+                <li key={crumb.href} className="flex items-center gap-1.5">
+                  {index > 0 && (
+                    <ChevronRight className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
+                  )}
+                  {crumb.isLast ? (
+                    <span className="font-medium text-text-main" aria-current="page">
+                      {crumb.label}
+                    </span>
+                  ) : (
+                    <Link
+                      href={crumb.href}
+                      className="text-text-muted transition-colors hover:text-text-main"
+                    >
+                      {crumb.label}
+                    </Link>
+                  )}
+                </li>
+              ))}
+            </ol>
           </nav>
 
           {/* Mobile breadcrumb - simplified, only show current page */}
-          <span className="text-sm font-medium text-text-main sm:hidden">
+          <span className="text-sm font-medium text-text-main sm:hidden" aria-hidden="true">
             {breadcrumbs[breadcrumbs.length - 1]?.label}
           </span>
 
           {/* Right side actions */}
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
-            {/* Notification bell */}
+            {/* Notification bell - 44px touch target */}
             <button
-              className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-text-muted transition-colors hover:border-accent-blue/50 hover:text-text-main"
+              className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-white/10 bg-white/5 text-text-muted transition-colors hover:border-accent-blue/50 hover:text-text-main sm:h-9 sm:w-9 sm:min-h-0 sm:min-w-0"
               aria-label={`Bildirimler - ${notificationCount} yeni`}
             >
-              <Bell className="h-[18px] w-[18px]" />
+              <Bell className="h-[18px] w-[18px]" aria-hidden="true" />
               {notificationCount > 0 && (
-                <span className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent-blue px-1 text-[10px] font-bold leading-none text-white">
+                <span
+                  className="absolute -right-1 -top-1 flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-accent-blue px-1 text-[10px] font-bold leading-none text-white"
+                  aria-hidden="true"
+                >
                   {notificationCount}
                 </span>
               )}
@@ -250,9 +270,10 @@ export default function AdminDashboardLayout({
                 <button
                   className="flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 p-1.5 transition-colors hover:border-accent-blue/50 focus:outline-none focus:ring-2 focus:ring-accent-blue/50"
                   aria-label="Kullanici menusu"
+                  aria-haspopup="true"
                 >
                   <Avatar className="h-7 w-7">
-                    <AvatarImage src="" alt="Admin" />
+                    <AvatarImage src="" alt="" />
                     <AvatarFallback className="bg-accent-blue/10 text-xs font-semibold text-accent-blue">
                       SA
                     </AvatarFallback>
@@ -273,13 +294,13 @@ export default function AdminDashboardLayout({
                 <DropdownMenuItem
                   className="cursor-pointer text-text-muted focus:bg-white/5 focus:text-text-main"
                 >
-                  <User className="mr-2 h-4 w-4" />
+                  <User className="mr-2 h-4 w-4" aria-hidden="true" />
                   Profil
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer text-text-muted focus:bg-white/5 focus:text-text-main"
                 >
-                  <Settings className="mr-2 h-4 w-4" />
+                  <Settings className="mr-2 h-4 w-4" aria-hidden="true" />
                   Ayarlar
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-white/10" />
@@ -287,7 +308,7 @@ export default function AdminDashboardLayout({
                   className="cursor-pointer text-red-400 focus:bg-white/5 focus:text-red-400"
                   onClick={handleLogout}
                 >
-                  <LogOut className="mr-2 h-4 w-4" />
+                  <LogOut className="mr-2 h-4 w-4" aria-hidden="true" />
                   Cikis Yap
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -296,7 +317,14 @@ export default function AdminDashboardLayout({
         </header>
 
         {/* Page content */}
-        <main className="p-4 lg:p-6">{children}</main>
+        <main
+          id="admin-main-content"
+          className="p-4 lg:p-6"
+          role="main"
+          aria-label="Admin icerik alani"
+        >
+          {children}
+        </main>
       </div>
     </div>
   );

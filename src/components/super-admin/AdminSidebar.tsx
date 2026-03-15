@@ -368,7 +368,7 @@ export default function AdminSidebar({ className }: AdminSidebarProps) {
         </div>
 
         {/* Navigation items */}
-        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
+        <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4" aria-label="Admin navigasyonu">
           {NAV_ITEMS.map((item) => renderNavItem(item, isCollapsed))}
         </nav>
 
