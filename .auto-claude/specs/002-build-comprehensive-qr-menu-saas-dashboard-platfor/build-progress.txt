@@ -244,3 +244,55 @@ Session N (Builder - subtask-8-3):
   * Verification: TypeScript compiles with 0 errors (npx tsc --noEmit)
   * No console.log debugging statements
   * Updated implementation_plan.json: subtask-8-3 status -> completed
+
+Session N (Builder - subtask-8-4):
+- [COMPLETED] subtask-8-4: Create user management and plan management pages
+  * Created src/app/super-admin/dashboard/kullanicilar/page.tsx (~680 lines):
+    - Page header: "Kullanici Yonetimi" with description
+    - Action buttons: Refresh (with spin animation), CSV export
+    - Stats summary: 4 cards (Toplam Kullanici, Restoran Sahipleri, Super Adminler, Askiya Alinan)
+    - Search bar with X-clear button, live filtering by name/email/restaurant/phone
+    - Filter dropdowns: Rol (Tum Roller + 3 roles), Durum (Tum Durumlar + 2 statuses)
+    - Clear filters button (appears when filters are active)
+    - Sortable table with 6 columns: name (with avatar initial), email/phone,
+      role (colored badges: Kullanici/Restoran Sahibi/Super Admin), status (dot + label),
+      registration date, last active (relative time)
+    - Sort by any column with direction toggle (asc/desc)
+    - Row actions: suspend/activate toggle, password reset email trigger
+    - Dropdown menu with role assignment (user/restaurant_owner/super_admin) with current
+      role indicator and confirmation dialog
+    - Role change confirmation dialog with user name and new role display
+    - Suspend/activate confirmation dialog with contextual messaging
+    - Password reset: triggers Supabase auth.resetPasswordForEmail with redirect URL
+    - CSV export with UTF-8 BOM for Turkish character support
+    - Empty state with Users icon and "Kullanici bulunamadi" message
+    - Loading skeleton state during data fetch
+    - 10 mock users with varied roles and statuses
+    - Supabase integration with mock fallback
+    - AnimatePresence for row enter/exit animations
+    - All Turkish UI text, glassmorphism dark theme, Framer Motion animations
+  * Created src/app/super-admin/dashboard/planlar/page.tsx (~650 lines):
+    - Page header: "Plan Yonetimi" with description and refresh button
+    - Stats summary: 4 cards showing restaurant count per plan (Ucretsiz/Starter/Pro/Enterprise)
+    - 4 Plan cards in responsive grid (1-col mobile, 2-col tablet, 4-col desktop):
+      * Each card: icon, name, description, pricing display (TL/ay format)
+      * Restaurant count using this plan
+      * Limits section: Maks. Masa, Maks. Urun, Maks. Aylik Siparis
+        (displays "Sinirsiz" for values >= 9999)
+      * Features section: Analitik, Kampanyalar, KDS, Coklu Dil with check/X indicators
+      * Edit mode toggle (Settings2 icon) with ring highlight
+      * Edit mode: number inputs for limits, animated toggle switches for features
+      * Save button in edit mode to persist changes
+    - Plan configurations: free (0 TL), starter (299 TL), pro (599 TL), enterprise (1499 TL)
+    - Manuel Plan Atama section (collapsible):
+      * Search bar for restaurant name/slug/owner
+      * Plan filter dropdown
+      * Restaurant list with current plan badge and plan selector dropdown
+      * Confirmation dialog before plan change
+      * Supabase update with mock fallback
+    - 10 mock restaurants for assignment testing
+    - Loading skeleton state with card placeholders
+    - All Turkish UI text, glassmorphism dark theme, Framer Motion animations
+  * Verification: TypeScript compiles with 0 errors (npx tsc --noEmit)
+  * No console.log debugging statements
+  * Updated implementation_plan.json: subtask-8-4 status -> completed
