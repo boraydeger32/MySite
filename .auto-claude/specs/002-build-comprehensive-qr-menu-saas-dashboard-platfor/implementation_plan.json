@@ -470,8 +470,8 @@
             "expected": "Order Components OK"
           },
           "status": "completed",
-          "notes": "Created OrderKanban.tsx with 4 status columns (Yeni/Hazirlaniyor/Hazir/Teslim Edildi), order cards showing table number, item count, total amount, elapsed time, notes indicator, waiter call indicator, and status transition buttons. Created OrderDetailModal.tsx with full item list with modifiers, status progress bar, table info, timestamps, total amount, notes section, status change buttons, and print button with CSS print format. Both components follow GlassCard/KPICard patterns with Framer Motion animations, cn() utility, TypeScript interfaces, and dark theme styling.",
-          "updated_at": "2026-03-15T16:00:00.000000+00:00"
+          "notes": "Created OrderKanban.tsx with 4 status columns (Yeni/Hazirlaniyor/Hazir/Teslim Edildi), order cards showing table number, item count, total amount, elapsed time, notes indicator, waiter call pulsing badge, and status transition buttons. Created OrderDetailModal.tsx with full item list with modifiers, status progress bar, table info, timestamps, total amount, notes section, status change buttons (forward/backward), and CSS print format support. Both components follow existing patterns (GlassCard, KPICard) with Framer Motion animations, cn() utility, TypeScript interfaces, dark theme styling, and Turkish UI text. TypeScript compilation clean. Commit: 652aca2",
+          "updated_at": "2026-03-15T14:08:08.616016+00:00"
         },
         {
           "id": "subtask-5-2",
@@ -489,7 +489,9 @@
             "command": "cd /Users/kullanici/Desktop/MySite && test -f src/components/qr-menu/KDSView.tsx && grep -c 'fullscreen\\|Realtime\\|channel' src/components/qr-menu/KDSView.tsx && echo 'KDS OK'",
             "expected": "KDS OK"
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created KDSView.tsx (703 lines) - fullscreen kitchen display with 3-column layout (Yeni/Hazirlaniyor/Hazir), color-coded urgency (normal/warning/critical based on wait time), Supabase Realtime subscription via channel, large font items for kitchen readability, fullscreen toggle, live clock, waiter call indicator, status transition buttons. TypeScript compiles with 0 errors. Verification: 13 matches for fullscreen/Realtime/channel. Commit: 8c0084a",
+          "updated_at": "2026-03-15T14:11:51.061467+00:00"
         },
         {
           "id": "subtask-5-3",
@@ -1211,12 +1213,12 @@
   "planStatus": "in_progress",
   "xstateState": "coding",
   "executionPhase": "coding",
-  "updated_at": "2026-03-15T14:03:34.221Z",
+  "updated_at": "2026-03-15T14:09:11.514Z",
   "lastEvent": {
     "eventId": "6266615c-9e3e-4f6a-aa92-83b7224f6aa1",
     "sequence": 0,
     "type": "PLANNING_COMPLETE",
     "timestamp": "2026-03-15T12:51:59.989792+00:00"
   },
-  "last_updated": "2026-03-15T14:02:45.565775+00:00"
+  "last_updated": "2026-03-15T14:11:51.061477+00:00"
 }
