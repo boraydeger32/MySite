@@ -803,7 +803,9 @@
               "Plan distribution pie chart visible"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Created super admin dashboard home page with 5 platform KPI cards (active restaurants, new registrations, total orders, platform revenue, active users), monthly growth line chart (restaurants + orders dual axis), plan distribution pie chart (Ucretsiz/Starter/Pro/Enterprise), and recent activity feed with timeline UI and 8 mock log entries. All TypeScript checks pass.",
+          "updated_at": "2026-03-15T14:00:00.000Z"
         },
         {
           "id": "subtask-8-3",
@@ -1233,7 +1235,7 @@
   "planStatus": "in_progress",
   "xstateState": "coding",
   "executionPhase": "coding",
-  "updated_at": "2026-03-15T15:06:44.464Z",
+  "updated_at": "2026-03-15T15:11:35.649Z",
   "lastEvent": {
     "eventId": "6266615c-9e3e-4f6a-aa92-83b7224f6aa1",
     "sequence": 0,
