@@ -949,7 +949,9 @@
               "No horizontal overflow"
             ]
           },
-          "status": "pending"
+          "status": "completed",
+          "notes": "Mobile responsive audit and fixes across dashboard pages (320px-1920px):\n\nlayout.tsx:\n- Added overflow-x-hidden on root container to prevent horizontal overflow\n- Increased mobile hamburger button to min-h-[44px] min-w-[44px] touch target\n- Increased notification bell to min-h-[44px] min-w-[44px] on mobile (reverts to h-9 w-9 on sm+)\n- All mobile nav items now have min-h-[44px] touch targets\n- Mobile bottom actions (Profil, Cikis Yap) now have min-h-[44px] touch targets\n- Added Framer Motion stagger entry animation for mobile nav items (mobileNavItemVariants)\n- Added Framer Motion page content entry animation (contentEntryVariants with spring transition, keyed by pathname)\n- Mobile nav now has overflow-y-auto for scrollable content\n\nSidebar.tsx:\n- Increased mobile hamburger button to min-h-[44px] min-w-[44px] touch target\n- Increased mobile close button to min-h-[44px] min-w-[44px] touch target\n- All mobile nav items (renderMobileNavItem) now have min-h-[44px] touch targets\n- Mobile logout button now has min-h-[44px] touch target\n\nOrderKanban.tsx:\n- Added columnEntryVariants for Framer Motion stagger entry animation on columns\n- Main container now uses motion.div with stagger children animation (0.08s stagger, 0.05s delay)\n- Added snap-x snap-mandatory on mobile for swipeable column navigation\n- Added custom scrollbar styling (thin track + thumb with hover state)\n- Added scroll-pl-4 scroll-pr-4 padding for snap alignment\n- Columns have snap-center class on mobile for swipe navigation\n- \"Move to next status\" button increased to min-h-[44px] touch target\n- Added active:scale-[0.97] feedback on status change button\n\nTypeScript: 0 errors. No console.log statements.",
+          "updated_at": "2026-03-15T15:54:31.546871+00:00"
         },
         {
           "id": "subtask-9-3",
@@ -1243,12 +1245,12 @@
   "planStatus": "in_progress",
   "xstateState": "coding",
   "executionPhase": "coding",
-  "updated_at": "2026-03-15T15:41:44.385Z",
+  "updated_at": "2026-03-15T15:48:39.200Z",
   "lastEvent": {
     "eventId": "6266615c-9e3e-4f6a-aa92-83b7224f6aa1",
     "sequence": 0,
     "type": "PLANNING_COMPLETE",
     "timestamp": "2026-03-15T12:51:59.989792+00:00"
   },
-  "last_updated": "2026-03-15T15:47:25.539903+00:00"
+  "last_updated": "2026-03-15T15:54:31.546878+00:00"
 }

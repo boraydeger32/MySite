@@ -185,6 +185,16 @@ const cardVariants = {
   },
 };
 
+const columnEntryVariants = {
+  hidden: { opacity: 0, y: 16, scale: 0.96 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: 'spring', stiffness: 300, damping: 28 },
+  },
+};
+
 function OrderCard({
   order,
   tables,
@@ -261,7 +271,7 @@ function OrderCard({
           </div>
         )}
 
-        {/* Action: Move to next status */}
+        {/* Action: Move to next status - 44px min touch target */}
         {column.nextStatus && (
           <button
             type="button"
@@ -270,10 +280,11 @@ function OrderCard({
               onStatusChange(order.id, column.nextStatus!);
             }}
             className={cn(
-              'mt-2.5 flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-1.5',
+              'mt-2.5 flex min-h-[44px] w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2',
               'border border-white/10 bg-white/[0.03] text-xs font-medium text-text-muted',
               'transition-all duration-200',
-              'hover:border-white/20 hover:bg-white/[0.06] hover:text-text-main'
+              'hover:border-white/20 hover:bg-white/[0.06] hover:text-text-main',
+              'active:scale-[0.97]'
             )}
           >
             {column.nextLabel}
@@ -307,9 +318,12 @@ function KanbanColumn({
   const Icon = column.icon;
 
   return (
-    <div
+    <motion.div
+      variants={columnEntryVariants}
       className={cn(
         'flex min-w-[280px] flex-1 flex-col rounded-xl border bg-white/[0.02] backdrop-blur-sm',
+        // On mobile, snap to full-width columns for easier horizontal swiping
+        'snap-center sm:snap-align-none',
         column.borderColor,
         column.bgGlow
       )}
@@ -359,7 +373,7 @@ function KanbanColumn({
           )}
         </AnimatePresence>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -402,9 +416,30 @@ export default function OrderKanban({
   }, [orders]);
 
   return (
-    <div
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={{
+        hidden: {},
+        visible: {
+          transition: {
+            staggerChildren: 0.08,
+            delayChildren: 0.05,
+          },
+        },
+      }}
       className={cn(
+        // Base horizontal scroll with momentum scrolling
         'flex gap-4 overflow-x-auto pb-4',
+        // Snap scroll for mobile - columns snap into view when swiping
+        'snap-x snap-mandatory sm:snap-none',
+        // Smooth momentum scrolling on iOS
+        '[&::-webkit-scrollbar]:h-1.5',
+        '[&::-webkit-scrollbar-track]:rounded-full [&::-webkit-scrollbar-track]:bg-white/5',
+        '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-white/10',
+        '[&::-webkit-scrollbar-thumb:hover]:bg-white/20',
+        // Scroll padding for snap alignment
+        'scroll-pl-4 scroll-pr-4',
         className
       )}
     >
@@ -418,6 +453,6 @@ export default function OrderKanban({
           onOrderClick={onOrderClick}
         />
       ))}
-    </div>
+    </motion.div>
   );
 }

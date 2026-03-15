@@ -3,6 +3,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
+import { motion } from 'framer-motion';
 import {
   Bell,
   ChevronRight,
@@ -37,6 +38,28 @@ import {
   SheetTitle,
   SheetTrigger,
 } from '@/components/ui/sheet';
+
+// ---------------------------------------------------------------------------
+// Animation Variants (follows MobileMenu.tsx pattern)
+// ---------------------------------------------------------------------------
+
+const contentEntryVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { type: 'spring', stiffness: 300, damping: 30, delay: 0.05 },
+  },
+};
+
+const mobileNavItemVariants = {
+  hidden: { opacity: 0, x: -16 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: { type: 'spring', stiffness: 300, damping: 24 },
+  },
+};
 
 interface BreadcrumbItem {
   label: string;
@@ -103,7 +126,7 @@ export default function DashboardLayout({
   }, [pathname]);
 
   return (
-    <div className="min-h-screen bg-bg-dark">
+    <div className="min-h-screen overflow-x-hidden bg-bg-dark">
       {/* Desktop Sidebar - hidden on mobile via Sidebar's own responsive logic */}
       <div className="hidden lg:block">
         <Sidebar />
@@ -117,7 +140,7 @@ export default function DashboardLayout({
           <Sheet open={isMobileSheetOpen} onOpenChange={setIsMobileSheetOpen}>
             <SheetTrigger asChild>
               <button
-                className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-text-muted transition-colors hover:border-accent-orange/50 hover:text-text-main lg:hidden"
+                className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-white/10 bg-white/5 text-text-muted transition-colors hover:border-accent-orange/50 hover:text-text-main lg:hidden"
                 aria-label="Navigasyon menusunu ac"
               >
                 <Menu className="h-5 w-5" />
@@ -138,51 +161,58 @@ export default function DashboardLayout({
                 </SheetTitle>
               </SheetHeader>
 
-              {/* Mobile navigation items */}
-              <nav className="flex flex-1 flex-col gap-1 px-3 py-4">
-                {MOBILE_NAV_ITEMS.map((item) => {
+              {/* Mobile navigation items - 44px min touch targets */}
+              <nav className="flex flex-1 flex-col gap-1 overflow-y-auto px-3 py-4">
+                {MOBILE_NAV_ITEMS.map((item, index) => {
                   const active = isActive(item.href);
                   const Icon = item.icon;
 
                   return (
-                    <Link
+                    <motion.div
                       key={item.href}
-                      href={item.href}
-                      onClick={closeMobileSheet}
-                      className={cn(
-                        'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-                        active
-                          ? 'bg-accent-orange/10 text-accent-orange'
-                          : 'text-text-muted hover:bg-white/5 hover:text-text-main'
-                      )}
-                      aria-current={active ? 'page' : undefined}
+                      variants={mobileNavItemVariants}
+                      initial="hidden"
+                      animate="visible"
+                      transition={{ delay: index * 0.04 }}
                     >
-                      <Icon
+                      <Link
+                        href={item.href}
+                        onClick={closeMobileSheet}
                         className={cn(
-                          'h-5 w-5 shrink-0',
+                          'flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
                           active
-                            ? 'text-accent-orange'
-                            : 'text-text-muted'
+                            ? 'bg-accent-orange/10 text-accent-orange'
+                            : 'text-text-muted hover:bg-white/5 hover:text-text-main'
                         )}
-                      />
-                      {item.label}
-                    </Link>
+                        aria-current={active ? 'page' : undefined}
+                      >
+                        <Icon
+                          className={cn(
+                            'h-5 w-5 shrink-0',
+                            active
+                              ? 'text-accent-orange'
+                              : 'text-text-muted'
+                          )}
+                        />
+                        {item.label}
+                      </Link>
+                    </motion.div>
                   );
                 })}
               </nav>
 
-              {/* Mobile bottom actions */}
+              {/* Mobile bottom actions - 44px min touch targets */}
               <div className="border-t border-white/10 px-3 py-3">
                 <Link
                   href="/qr-menu/dashboard/ayarlar"
                   onClick={closeMobileSheet}
-                  className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-muted transition-colors hover:bg-white/5 hover:text-text-main"
+                  className="flex min-h-[44px] items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-muted transition-colors hover:bg-white/5 hover:text-text-main"
                 >
                   <User className="h-5 w-5 shrink-0" />
                   Profil
                 </Link>
                 <button
-                  className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-muted transition-colors hover:bg-white/5 hover:text-red-400"
+                  className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-muted transition-colors hover:bg-white/5 hover:text-red-400"
                   onClick={closeMobileSheet}
                 >
                   <LogOut className="h-5 w-5 shrink-0" />
@@ -225,9 +255,9 @@ export default function DashboardLayout({
 
           {/* Right side actions */}
           <div className="ml-auto flex items-center gap-2 sm:gap-3">
-            {/* Notification bell */}
+            {/* Notification bell - 44px touch target */}
             <button
-              className="relative flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-text-muted transition-colors hover:border-accent-orange/50 hover:text-text-main"
+              className="relative flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-white/10 bg-white/5 text-text-muted transition-colors hover:border-accent-orange/50 hover:text-text-main sm:h-9 sm:w-9 sm:min-h-0 sm:min-w-0"
               aria-label={`Bildirimler - ${notificationCount} yeni`}
             >
               <Bell className="h-[18px] w-[18px]" />
@@ -298,8 +328,16 @@ export default function DashboardLayout({
           </div>
         </header>
 
-        {/* Page content */}
-        <main className="p-4 lg:p-6">{children}</main>
+        {/* Page content with entry animation */}
+        <motion.main
+          key={pathname}
+          variants={contentEntryVariants}
+          initial="hidden"
+          animate="visible"
+          className="p-4 lg:p-6"
+        >
+          {children}
+        </motion.main>
       </div>
     </div>
   );

@@ -230,7 +230,7 @@ export default function Sidebar({
           href={item.href}
           onClick={closeMobileMenu}
           className={cn(
-            'flex items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors',
+            'flex min-h-[44px] items-center gap-3 rounded-lg px-4 py-3 text-base font-medium transition-colors',
             active
               ? 'bg-accent-orange/10 text-accent-orange'
               : 'text-text-main hover:bg-white/5 hover:text-accent-orange'
@@ -251,10 +251,10 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Mobile hamburger button */}
+      {/* Mobile hamburger button - 44px minimum touch target */}
       <motion.button
         onClick={toggleMobileMenu}
-        className="fixed left-4 top-4 z-80 flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-bg-dark/90 text-text-main backdrop-blur-xl transition-colors hover:border-accent-orange/50 hover:text-accent-orange lg:hidden"
+        className="fixed left-4 top-4 z-80 flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-white/10 bg-bg-dark/90 text-text-main backdrop-blur-xl transition-colors hover:border-accent-orange/50 hover:text-accent-orange lg:hidden"
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         aria-label={isMobileOpen ? 'Menuyu kapat' : 'Menuyu ac'}
@@ -308,7 +308,7 @@ export default function Sidebar({
                 </div>
                 <motion.button
                   onClick={closeMobileMenu}
-                  className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/10 bg-white/5 text-text-main transition-colors hover:border-accent-orange/50 hover:text-accent-orange"
+                  className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-white/10 bg-white/5 text-text-main transition-colors hover:border-accent-orange/50 hover:text-accent-orange"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                   aria-label="Menuyu kapat"
@@ -322,13 +322,13 @@ export default function Sidebar({
                 {NAV_ITEMS.map((item) => renderMobileNavItem(item))}
               </div>
 
-              {/* Mobile bottom section */}
+              {/* Mobile bottom section - 44px min touch targets */}
               <div className="border-t border-white/10 p-3">
                 {BOTTOM_ITEMS.map((item) => renderMobileNavItem(item))}
                 <motion.div variants={itemVariants}>
                   <button
                     onClick={closeMobileMenu}
-                    className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-text-muted transition-colors hover:bg-white/5 hover:text-red-400"
+                    className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-text-muted transition-colors hover:bg-white/5 hover:text-red-400"
                   >
                     <LogOut className="h-5 w-5 shrink-0" />
                     Cikis
