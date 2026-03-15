@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import {
   ShoppingCart,
   DollarSign,
@@ -11,6 +11,8 @@ import {
   AlertTriangle,
   ArrowRight,
   Package,
+  Plus,
+  UtensilsCrossed,
 } from 'lucide-react';
 import {
   LineChart,
@@ -24,8 +26,11 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
+import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import KPICard from '@/components/qr-menu/KPICard';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 
 // =============================================================================
 // Mock Data
@@ -198,6 +203,119 @@ function getHeatmapColor(value: number, max: number): string {
 }
 
 // =============================================================================
+// Loading Skeleton for Dashboard Content
+// =============================================================================
+
+function DashboardSkeleton() {
+  return (
+    <div className="flex flex-col gap-6">
+      {/* KPI Cards Row */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <div
+            key={i}
+            className="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl"
+          >
+            <div className="flex items-center justify-between">
+              <Skeleton className="h-9 w-9 rounded-lg bg-white/10" />
+              <Skeleton className="h-5 w-16 rounded-full bg-white/5" />
+            </div>
+            <Skeleton className="mt-3 h-7 w-20 bg-white/10" />
+            <Skeleton className="mt-2 h-3 w-28 bg-white/5" />
+          </div>
+        ))}
+      </div>
+
+      {/* Charts Row */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl lg:col-span-2">
+          <Skeleton className="h-5 w-28 bg-white/10" />
+          <Skeleton className="mt-4 h-[280px] w-full rounded-lg bg-white/5" />
+        </div>
+        <div className="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+          <Skeleton className="h-5 w-28 bg-white/10" />
+          <Skeleton className="mt-4 h-[280px] w-full rounded-lg bg-white/5" />
+        </div>
+      </div>
+
+      {/* Heatmap */}
+      <div className="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+        <Skeleton className="h-5 w-44 bg-white/10" />
+        <Skeleton className="mt-4 h-[200px] w-full rounded-lg bg-white/5" />
+      </div>
+
+      {/* Bottom Row */}
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
+        <div className="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl lg:col-span-2">
+          <Skeleton className="h-5 w-28 bg-white/10" />
+          <div className="mt-4 space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-10 w-full bg-white/5" />
+            ))}
+          </div>
+        </div>
+        <div className="space-y-4">
+          <div className="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+            <Skeleton className="h-5 w-24 bg-white/10" />
+            <div className="mt-4 grid grid-cols-4 gap-2">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="aspect-square rounded-lg bg-white/5" />
+              ))}
+            </div>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/5 p-5 backdrop-blur-xl">
+            <Skeleton className="h-5 w-32 bg-white/10" />
+            <div className="mt-4 space-y-2">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <Skeleton key={i} className="h-10 w-full bg-white/5" />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
+// Empty State for Dashboard (when restaurant has no data yet)
+// =============================================================================
+
+function DashboardEmptyState() {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-16 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-orange/10">
+        <UtensilsCrossed className="h-8 w-8 text-accent-orange" />
+      </div>
+      <h3 className="mt-6 font-display text-lg font-bold text-text-main">
+        Restoraniniza Hos Geldiniz!
+      </h3>
+      <p className="mt-2 max-w-md text-sm text-text-muted">
+        Dashboard&apos;iniz henuz bos gorunuyor. Menunuzu olusturarak baslayabilirsiniz.
+        Kategoriler ve urunler eklendikce burada istatistikler goruntulenecektir.
+      </p>
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+        <Button asChild className="bg-accent-orange text-white hover:bg-accent-orange/90">
+          <Link href="/qr-menu/dashboard/menu">
+            <Plus className="mr-2 h-4 w-4" />
+            Ilk Kategorinizi Olusturun
+          </Link>
+        </Button>
+        <Button
+          asChild
+          variant="ghost"
+          className="border border-white/10 bg-white/5 text-text-muted hover:bg-white/10 hover:text-text-main"
+        >
+          <Link href="/qr-menu/dashboard/masalar">
+            Masalari Ayarlayin
+          </Link>
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+// =============================================================================
 // Custom Recharts Tooltip
 // =============================================================================
 
@@ -232,10 +350,55 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
 // =============================================================================
 
 export default function DashboardPage() {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasData, setHasData] = useState(true);
+
   const heatmapMax = useMemo(
     () => Math.max(...MOCK_HEATMAP.flat()),
     []
   );
+
+  // Simulate data loading (replace with real API call when connected)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+      // In a real app, check if restaurant has any data
+      setHasData(true);
+    }, 600);
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-text-main">
+            Dashboard
+          </h1>
+          <p className="mt-1 text-sm text-text-muted">
+            Restoraninizin genel durumunu buradan takip edebilirsiniz.
+          </p>
+        </div>
+        <DashboardSkeleton />
+      </div>
+    );
+  }
+
+  if (!hasData) {
+    return (
+      <div className="flex flex-col gap-6">
+        <div>
+          <h1 className="font-display text-2xl font-bold text-text-main">
+            Dashboard
+          </h1>
+          <p className="mt-1 text-sm text-text-muted">
+            Restoraninizin genel durumunu buradan takip edebilirsiniz.
+          </p>
+        </div>
+        <DashboardEmptyState />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">

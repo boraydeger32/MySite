@@ -30,6 +30,8 @@ import KDSView from '@/components/qr-menu/KDSView';
 import OrderDetailModal from '@/components/qr-menu/OrderDetailModal';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
 import type { Order, OrderStatus, Table } from '@/lib/supabase/types';
 
 // ---------------------------------------------------------------------------
@@ -855,17 +857,103 @@ function OrderHistoryTab({ orders, tables, onOrderClick }: OrderHistoryTabProps)
 }
 
 // ---------------------------------------------------------------------------
+// Loading Skeleton for Orders Content
+// ---------------------------------------------------------------------------
+
+function OrdersSkeleton() {
+  return (
+    <div className="space-y-4">
+      {/* Stats Bar Skeleton */}
+      <div className="flex flex-wrap items-center gap-3">
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-8 w-20 rounded-lg bg-white/5" />
+        ))}
+      </div>
+
+      {/* Kanban Columns Skeleton */}
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {Array.from({ length: 3 }).map((_, colIdx) => (
+          <div
+            key={colIdx}
+            className="rounded-xl border border-white/10 bg-white/[0.02] p-4"
+          >
+            <div className="mb-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Skeleton className="h-5 w-5 rounded bg-white/10" />
+                <Skeleton className="h-5 w-24 bg-white/10" />
+              </div>
+              <Skeleton className="h-5 w-8 rounded-full bg-white/5" />
+            </div>
+            <div className="space-y-3">
+              {Array.from({ length: colIdx === 0 ? 3 : 2 }).map((_, i) => (
+                <div
+                  key={i}
+                  className="rounded-lg border border-white/10 bg-white/5 p-4"
+                >
+                  <div className="flex items-center justify-between">
+                    <Skeleton className="h-4 w-20 bg-white/10" />
+                    <Skeleton className="h-4 w-16 bg-white/5" />
+                  </div>
+                  <div className="mt-3 space-y-2">
+                    <Skeleton className="h-3 w-full bg-white/5" />
+                    <Skeleton className="h-3 w-2/3 bg-white/5" />
+                  </div>
+                  <div className="mt-3 flex items-center justify-between">
+                    <Skeleton className="h-5 w-16 rounded-full bg-white/5" />
+                    <Skeleton className="h-4 w-14 bg-white/10" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Empty State for Active Orders
+// ---------------------------------------------------------------------------
+
+function EmptyActiveOrders() {
+  return (
+    <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-white/10 bg-white/[0.02] p-16 text-center">
+      <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-accent-orange/10">
+        <ShoppingCart className="h-8 w-8 text-accent-orange" />
+      </div>
+      <h3 className="mt-6 font-display text-lg font-bold text-text-main">
+        Henuz siparis yok
+      </h3>
+      <p className="mt-2 max-w-md text-sm text-text-muted">
+        Aktif siparis bulunmuyor. Musterileriniz QR menu uzerinden siparis verdikce
+        burada canli olarak goruntulenecektir.
+      </p>
+      <div className="mt-5 flex items-center gap-2 rounded-lg bg-white/5 px-4 py-2.5">
+        <motion.span
+          animate={{ opacity: [1, 0.3, 1] }}
+          transition={{ repeat: Infinity, duration: 2 }}
+          className="h-2 w-2 rounded-full bg-emerald-400"
+        />
+        <span className="text-xs text-text-muted">Canli dinleniyor - yeni siparisler otomatik gorunecek</span>
+      </div>
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // SiparislerPage (Main Page Component)
 // ---------------------------------------------------------------------------
 
 export default function SiparislerPage() {
   // ---- State ----
-  const [orders, setOrders] = useState<Order[]>(() => generateMockOrders());
+  const [orders, setOrders] = useState<Order[]>([]);
   const [tables] = useState<Table[]>(MOCK_TABLES);
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [activeTab, setActiveTab] = useState<MainTab>('active');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const channelRef = useRef<ReturnType<ReturnType<typeof createClient>['channel']> | null>(null);
 
   // ---- Derived state ----
@@ -881,6 +969,34 @@ export default function SiparislerPage() {
     () => activeOrders.filter((o) => o.waiter_called).length,
     [activeOrders]
   );
+
+  // ---- Initial data load ----
+  useEffect(() => {
+    async function loadOrders() {
+      setIsLoading(true);
+      try {
+        const supabase = createClient();
+        const { data, error } = await supabase
+          .from('orders')
+          .select('*')
+          .eq('restaurant_id', MOCK_RESTAURANT_ID)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        if (data) {
+          setOrders(data as Order[]);
+          setIsLoading(false);
+          return;
+        }
+      } catch {
+        // Fallback to mock data when Supabase is not available
+      }
+      setOrders(generateMockOrders());
+      setIsLoading(false);
+    }
+
+    loadOrders();
+  }, []);
 
   // ---- Supabase Realtime subscription ----
   useEffect(() => {
@@ -1060,45 +1176,53 @@ export default function SiparislerPage() {
 
         {/* ---- Active Orders Tab ---- */}
         <TabsContent value="active" className="space-y-4">
-          {/* Stats bar */}
-          <ActiveOrdersStats orders={orders} />
+          {isLoading ? (
+            <OrdersSkeleton />
+          ) : activeOrders.length === 0 ? (
+            <EmptyActiveOrders />
+          ) : (
+            <>
+              {/* Stats bar */}
+              <ActiveOrdersStats orders={orders} />
 
-          {/* View content */}
-          <AnimatePresence mode="wait">
-            {viewMode === 'kanban' ? (
-              <motion.div
-                key="kanban"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                <OrderKanban
-                  orders={activeOrders}
-                  tables={tables}
-                  onStatusChange={handleStatusChange}
-                  onOrderClick={handleOrderClick}
-                />
-              </motion.div>
-            ) : (
-              <motion.div
-                key="kds"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                transition={{ duration: 0.2 }}
-                className="min-h-[600px] overflow-hidden rounded-xl border border-white/10"
-              >
-                <KDSView
-                  orders={activeOrders}
-                  tables={tables}
-                  restaurantId={MOCK_RESTAURANT_ID}
-                  onStatusChange={handleStatusChange}
-                  onOrdersUpdate={handleOrdersUpdate}
-                />
-              </motion.div>
-            )}
-          </AnimatePresence>
+              {/* View content */}
+              <AnimatePresence mode="wait">
+                {viewMode === 'kanban' ? (
+                  <motion.div
+                    key="kanban"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <OrderKanban
+                      orders={activeOrders}
+                      tables={tables}
+                      onStatusChange={handleStatusChange}
+                      onOrderClick={handleOrderClick}
+                    />
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="kds"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="min-h-[600px] overflow-hidden rounded-xl border border-white/10"
+                  >
+                    <KDSView
+                      orders={activeOrders}
+                      tables={tables}
+                      restaurantId={MOCK_RESTAURANT_ID}
+                      onStatusChange={handleStatusChange}
+                      onOrdersUpdate={handleOrdersUpdate}
+                    />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </>
+          )}
         </TabsContent>
 
         {/* ---- History Tab ---- */}
