@@ -622,7 +622,9 @@
             "command": "cd /Users/kullanici/Desktop/MySite && test -f src/components/qr-menu/public/CartDrawer.tsx && test -f src/components/qr-menu/public/WaiterCallButton.tsx && test -f src/components/qr-menu/public/AllergenFilter.tsx && test -f src/components/qr-menu/public/LanguageSwitcher.tsx && echo 'Cart Components OK'",
             "expected": "Cart Components OK"
           },
-          "status": "completed"
+          "status": "completed",
+          "notes": "Created all 4 cart and utility components for public menu: CartDrawer (floating cart button with item count badge + slide-out drawer with item list, quantity controls, total, and Siparis Ver submit button), WaiterCallButton (floating action button with idle/loading/called states), AllergenFilter (toggle chips for filtering menu items by allergens with clear all), LanguageSwitcher (TR/EN toggle with Zustand store and hardcoded translations dictionary + useTranslation hook). All follow existing code patterns - use Zustand store, framer-motion animations, theme props, Turkish UI text, lucide-react icons. TypeScript compiles clean with no errors.",
+          "updated_at": "2026-03-15T14:38:24.748368+00:00"
         },
         {
           "id": "subtask-6-5",
@@ -648,7 +650,9 @@
               "Language switcher toggles TR/EN"
             ]
           },
-          "status": "pending"
+          "status": "in_progress",
+          "notes": "Starting implementation of public-facing restaurant pages",
+          "updated_at": "2026-03-15T14:39:18.296447+00:00"
         }
       ]
     },
@@ -1221,12 +1225,12 @@
   "planStatus": "in_progress",
   "xstateState": "coding",
   "executionPhase": "coding",
-  "updated_at": "2026-03-15T14:34:37.872Z",
+  "updated_at": "2026-03-15T14:39:08.217Z",
   "lastEvent": {
     "eventId": "6266615c-9e3e-4f6a-aa92-83b7224f6aa1",
     "sequence": 0,
     "type": "PLANNING_COMPLETE",
     "timestamp": "2026-03-15T12:51:59.989792+00:00"
   },
-  "last_updated": "2026-03-15T14:33:43.782076+00:00"
+  "last_updated": "2026-03-15T14:39:18.296456+00:00"
 }
