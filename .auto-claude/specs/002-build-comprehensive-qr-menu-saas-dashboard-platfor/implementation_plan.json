@@ -1,0 +1,1259 @@
+{
+  "feature": "Build Comprehensive QR Menu SaaS Dashboard Platform",
+  "workflow_type": "feature",
+  "workflow_rationale": "Greenfield feature addition to existing Next.js marketing site. No existing QR menu, dashboard, or admin code exists. All routes, components, database schema, auth flows, and state management must be built from scratch across 4 major subsystems.",
+  "phases": [
+    {
+      "id": "phase-1-infrastructure",
+      "name": "Infrastructure & Configuration",
+      "type": "setup",
+      "description": "Fix critical config blockers, install all dependencies, set up Supabase infrastructure, create auth middleware, reorganize route structure, and build foundational utilities.",
+      "depends_on": [],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-1-1",
+          "description": "Fix next.config.mjs by removing output:'export', create .env.local template with Supabase env vars, and install all new npm dependencies (Supabase, Zustand, Recharts, qrcode.react, dnd-kit, JSZip, react-colorful, file-saver)",
+          "service": "main",
+          "files_to_modify": [
+            "next.config.mjs",
+            "package.json"
+          ],
+          "files_to_create": [
+            ".env.local.example"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && node -e \"const c = require('./next.config.mjs'); console.log('no export:', !c.output)\" 2>/dev/null || grep -c 'output' next.config.mjs | grep 0 && echo 'Config OK' && node -e \"require('@supabase/supabase-js'); require('zustand'); require('recharts'); require('qrcode.react'); console.log('Deps OK')\"",
+            "expected": "Config OK and Deps OK"
+          },
+          "status": "completed",
+          "notes": "Removed output:'export' from next.config.mjs, created .env.local.example with Supabase env vars, installed all npm dependencies (@supabase/supabase-js, @supabase/ssr, zustand, recharts, qrcode.react, @dnd-kit/core, @dnd-kit/sortable, @dnd-kit/utilities, jszip, file-saver, react-colorful, @types/file-saver). Verification passed: Config OK + Deps OK. Commit: fd4183b",
+          "updated_at": "2026-03-15T12:54:06.958180+00:00"
+        },
+        {
+          "id": "subtask-1-2",
+          "description": "Initialize Shadcn/ui by creating components.json config file, updating tailwind.config.ts with Shadcn CSS variables/darkMode config, updating globals.css with Shadcn base layer variables, and adding all required Shadcn components (button, card, dialog, input, label, select, tabs, table, badge, switch, dropdown-menu, sheet, skeleton, separator, popover, tooltip, avatar, scroll-area, command, textarea, checkbox, radio-group, slider)",
+          "service": "main",
+          "files_to_modify": [
+            "tailwind.config.ts",
+            "src/styles/globals.css"
+          ],
+          "files_to_create": [
+            "components.json"
+          ],
+          "patterns_from": [
+            "tailwind.config.ts",
+            "src/styles/globals.css"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && test -f components.json && ls src/components/ui/button.tsx && echo 'Shadcn OK'",
+            "expected": "Shadcn OK"
+          },
+          "status": "completed",
+          "notes": "Initialized Shadcn/ui with full component library. Created components.json config, updated tailwind.config.ts with darkMode/Shadcn color system/tailwindcss-animate plugin, updated globals.css with HSL CSS variables mapped to existing dark theme. Created all 23 required components: button, card, dialog, input, label, select, tabs, table, badge, switch, dropdown-menu, sheet, skeleton, separator, popover, tooltip, avatar, scroll-area, command, textarea, checkbox, radio-group, slider. Installed all required dependencies (class-variance-authority, tailwindcss-animate, cmdk, @radix-ui/react-slot, and Radix UI primitives). TypeScript compilation passes cleanly.",
+          "updated_at": "2026-03-15T13:00:24.431722+00:00"
+        },
+        {
+          "id": "subtask-1-3",
+          "description": "Create Supabase browser client (createBrowserClient) and server client (async createServerClient with cookie store). Use NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY naming convention. Server client must include try/catch in setAll for Server Component compatibility.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/lib/supabase/client.ts",
+            "src/lib/supabase/server.ts"
+          ],
+          "patterns_from": [
+            "src/lib/utils.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && npx tsc --noEmit src/lib/supabase/client.ts src/lib/supabase/server.ts 2>&1 | head -5 || echo 'Type check ran'",
+            "expected": "No TypeScript errors"
+          },
+          "status": "completed",
+          "notes": "Created browser client (src/lib/supabase/client.ts) using createBrowserClient from @supabase/ssr and server client (src/lib/supabase/server.ts) using async createServerClient with cookie store. Uses NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY naming. Server client includes try/catch in setAll for Server Component compatibility. TypeScript type check passes with no errors in Supabase files. Commit: 11fcad6",
+          "updated_at": "2026-03-15T13:02:27.685422+00:00"
+        },
+        {
+          "id": "subtask-1-4",
+          "description": "Create Next.js middleware at src/middleware.ts for auth token refresh on every request and route protection for /qr-menu/dashboard/* and /super-admin/dashboard/*. Unauthenticated users redirect to respective login pages. Create OAuth callback route handler at src/app/auth/callback/route.ts for Google sign-in redirect.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/middleware.ts",
+            "src/app/auth/callback/route.ts"
+          ],
+          "patterns_from": [
+            "src/app/api/contact/route.ts",
+            "src/lib/supabase/server.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && test -f src/middleware.ts && test -f src/app/auth/callback/route.ts && echo 'Auth files OK'",
+            "expected": "Auth files OK"
+          },
+          "status": "completed",
+          "notes": "Created src/middleware.ts with Supabase auth token refresh on every request and route protection for /qr-menu/dashboard/* and /super-admin/dashboard/*. Unauthenticated users redirect to respective login pages (/qr-menu/giris, /super-admin/giris) with redirectTo query param. Created src/app/auth/callback/route.ts for Google OAuth code exchange flow. Both files follow the Supabase SSR cookie pattern. TypeScript compilation clean, verification passed.",
+          "updated_at": "2026-03-15T13:04:42.314271+00:00"
+        },
+        {
+          "id": "subtask-1-5",
+          "description": "Create complete database schema SQL (src/lib/supabase/schema.sql) with all 8 tables (restaurants, menu_categories, menu_items, tables, orders, campaigns, announcements, user_profiles), RLS policies for owner isolation and public read access, realtime configuration for orders/tables/announcements, and storage bucket definitions. Create seed SQL (src/lib/supabase/seed.sql) with demo restaurant, menu data, and test orders. Create TypeScript type definitions (src/lib/supabase/types.ts) matching the schema.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/lib/supabase/schema.sql",
+            "src/lib/supabase/seed.sql",
+            "src/lib/supabase/types.ts"
+          ],
+          "patterns_from": [],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && test -f src/lib/supabase/schema.sql && grep -c 'CREATE TABLE' src/lib/supabase/schema.sql && grep -c 'ENABLE ROW LEVEL SECURITY' src/lib/supabase/schema.sql && echo 'Schema OK'",
+            "expected": "8 tables, 8 RLS enables, Schema OK"
+          },
+          "status": "completed",
+          "notes": "Created all 3 files: schema.sql (8 tables, 8 RLS enables, 45 policies, 16 indexes, 3 realtime publications, 3 storage buckets), seed.sql (demo restaurant with 5 categories, 24 menu items, 6 tables, 6 test orders, 4 campaigns, 3 announcements), types.ts (full TypeScript type definitions with Row/Insert/Update types, JSONB field types, joined types, and Database interface). Verification passed: 8 CREATE TABLE, 8 ENABLE ROW LEVEL SECURITY.",
+          "updated_at": "2026-03-15T13:09:46.404381+00:00"
+        },
+        {
+          "id": "subtask-1-6",
+          "description": "Reorganize existing marketing site routes into (site) route group to prevent [restoran-slug] dynamic route collision. Move page.tsx, blog/, hizmetler/, ekibimiz/, iletisim/, referanslar/ into src/app/(site)/. Create src/app/(site)/layout.tsx with Navbar + Footer. Update root layout.tsx to remove Navbar/Footer (keep HTML shell, fonts, Toaster, LoadingScreen only). Keep api/, robots.ts, sitemap.ts, not-found.tsx at root level.",
+          "service": "main",
+          "files_to_modify": [
+            "src/app/layout.tsx"
+          ],
+          "files_to_create": [
+            "src/app/(site)/layout.tsx"
+          ],
+          "patterns_from": [
+            "src/app/layout.tsx",
+            "src/components/layout/Navbar.tsx"
+          ],
+          "notes": "Reorganized marketing site routes into (site) route group. Moved page.tsx, blog/, hizmetler/, ekibimiz/, iletisim/, referanslar/ into src/app/(site)/. Created (site)/layout.tsx with Navbar, Footer, ScrollProgressBar, CustomCursor, BackToTopButton. Updated root layout.tsx to keep only HTML shell, fonts, LoadingScreen, and Toaster. Root-level api/, auth/, robots.ts, sitemap.ts, not-found.tsx, loading.tsx remain untouched.",
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && test -d src/app/'(site)'/blog && test -f src/app/'(site)'/layout.tsx && test -f src/app/'(site)'/page.tsx && echo 'Route reorg OK'",
+            "expected": "Route reorg OK"
+          },
+          "status": "completed",
+          "updated_at": "2026-03-15T13:11:57.030836+00:00"
+        },
+        {
+          "id": "subtask-1-7",
+          "description": "Create shared utility files: src/lib/fonts.ts with 10 Google Font definitions (all with latin-ext subset) exported as CSS variables for theme editor. Create Zustand stores: src/store/useCartStore.ts for customer cart state and src/store/useRestaurantStore.ts for dashboard state management. Create src/components/TeklifModal.tsx service selection modal with 4 radio cards (only QR Menu active, others disabled with 'Yakinda' badge), Framer Motion animations.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/lib/fonts.ts",
+            "src/store/useCartStore.ts",
+            "src/store/useRestaurantStore.ts",
+            "src/components/TeklifModal.tsx"
+          ],
+          "patterns_from": [
+            "src/components/ui/GlassCard.tsx",
+            "src/lib/utils.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && test -f src/lib/fonts.ts && test -f src/store/useCartStore.ts && test -f src/store/useRestaurantStore.ts && test -f src/components/TeklifModal.tsx && echo 'Utilities OK'",
+            "expected": "Utilities OK"
+          },
+          "status": "completed",
+          "notes": "Created all 4 files: src/lib/fonts.ts (10 Google Fonts with latin-ext subset - Inter, Poppins, Nunito, Playfair Display, Lora, Montserrat, Raleway, Open Sans, Merriweather, Roboto - with ThemeFont registry and CSS variables), src/store/useCartStore.ts (Zustand cart store with add/remove/quantity/modifier support and totals), src/store/useRestaurantStore.ts (Zustand dashboard store with restaurant, menu, tables, orders, campaigns, UI state, and reset), src/components/TeklifModal.tsx (service selection modal with 4 radio cards, only QR Menu active, Yakinda badge on disabled, Framer Motion animations, glassmorphism design). TypeScript compilation clean, verification passed. Commit: 8de390b",
+          "updated_at": "2026-03-15T13:15:34.059561+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-2-auth-dashboard-shell",
+      "name": "Authentication & Dashboard Shell",
+      "type": "implementation",
+      "description": "Build Supabase auth pages (login/register), create the dashboard layout with collapsible sidebar, header, breadcrumb, and notification bell, and implement the dashboard home page with KPI cards and charts.",
+      "depends_on": [
+        "phase-1-infrastructure"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-2-1",
+          "description": "Create QR Menu login page at /qr-menu/giris with email+password form, Google OAuth button, 'Sifremi Unuttum' link, premium dark mode design with gradient background. Use react-hook-form + zod validation, Supabase signInWithPassword and signInWithOAuth. Handle basePath in OAuth redirect URL.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/qr-menu/giris/page.tsx"
+          ],
+          "patterns_from": [
+            "src/components/forms/ContactForm.tsx",
+            "src/lib/supabase/client.ts"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/qr-menu/giris",
+            "checks": [
+              "Login form renders with email/password fields",
+              "Google OAuth button visible",
+              "Sifremi Unuttum link present",
+              "No console errors"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created QR Menu login page at /qr-menu/giris with: email+password form (react-hook-form + zod validation), Google OAuth button with basePath-aware redirect URL (/MySite/auth/callback), Sifremi Unuttum link, premium dark mode design with gradient background and glassmorphism card, Framer Motion stagger animations, password visibility toggle, Turkish UI text, proper error handling with sonner toasts, accessible form labels and ARIA attributes. TypeScript clean - no errors. Follows ContactForm.tsx and GlassCard.tsx patterns exactly.",
+          "updated_at": "2026-03-15T13:19:13.103238+00:00"
+        },
+        {
+          "id": "subtask-2-2",
+          "description": "Create QR Menu registration page at /qr-menu/kayit with fields: restaurant name, owner full name, email, password, password confirm, phone. Use react-hook-form + zod validation, Supabase signUp, create restaurant record and user_profile after signup. Include link to login page.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/qr-menu/kayit/page.tsx"
+          ],
+          "patterns_from": [
+            "src/components/forms/ContactForm.tsx",
+            "src/app/qr-menu/giris/page.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/qr-menu/kayit",
+            "checks": [
+              "Registration form renders with all fields",
+              "Validation errors display correctly",
+              "No console errors"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created QR Menu registration page at /qr-menu/kayit with: restaurant name, owner full name, email, phone (optional), password, password confirm fields. Uses react-hook-form + zod validation with .refine() for password matching. Supabase signUp creates auth user, then inserts restaurant record and user_profile. Includes link to login page and back to home. Follows exact patterns from giris/page.tsx (motion variants, inputClasses, icon-prefixed inputs, eye toggle for passwords). TypeScript compiles cleanly.",
+          "updated_at": "2026-03-15T13:21:59.867308+00:00"
+        },
+        {
+          "id": "subtask-2-3",
+          "description": "Create Sidebar component (src/components/qr-menu/Sidebar.tsx) with collapsible sidebar containing: restaurant logo+name, icon navigation menu (Ana Sayfa, Menu, Masalar, Siparisler, Tema, Analitik, Kampanyalar, Ayarlar), bottom section (Profil, Cikis). Active link highlight with accent color. Collapse to icon-only mode. Mobile responsive.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/components/qr-menu/Sidebar.tsx"
+          ],
+          "patterns_from": [
+            "src/components/layout/Navbar.tsx",
+            "src/components/layout/MobileMenu.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && test -f src/components/qr-menu/Sidebar.tsx && grep -c 'use client' src/components/qr-menu/Sidebar.tsx && echo 'Sidebar OK'",
+            "expected": "Sidebar OK"
+          },
+          "status": "completed",
+          "notes": "Created Sidebar.tsx with: collapsible desktop sidebar (expanded/icon-only modes with spring animations), mobile responsive hamburger menu with slide-out overlay, 8 navigation items with lucide-react icons, restaurant logo+name header, bottom section with Profil and Cikis, active link highlight with accent-orange indicator bar, tooltips in collapsed state, keyboard accessibility (Escape to close mobile). Follows patterns from Navbar.tsx and MobileMenu.tsx exactly.",
+          "updated_at": "2026-03-15T13:24:43.939677+00:00"
+        },
+        {
+          "id": "subtask-2-4",
+          "description": "Create dashboard layout at src/app/qr-menu/dashboard/layout.tsx integrating the Sidebar component. Add top header bar with: breadcrumb navigation, notification bell with realtime badge count, user avatar dropdown (profile, settings, 'Menuyu Goruntule' public link, logout), and mobile hamburger menu that opens sidebar as sheet/drawer.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/qr-menu/dashboard/layout.tsx"
+          ],
+          "patterns_from": [
+            "src/app/layout.tsx",
+            "src/components/qr-menu/Sidebar.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/qr-menu/dashboard",
+            "checks": [
+              "Sidebar renders with navigation links",
+              "Header bar with breadcrumb visible",
+              "Layout wraps child content correctly"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created dashboard layout at src/app/qr-menu/dashboard/layout.tsx. Integrates Sidebar component for desktop (hidden on mobile via wrapper div). Header bar includes: breadcrumb navigation (auto-generated from pathname with Turkish labels), notification bell with orange badge count, user avatar dropdown (Profile, Ayarlar, Menuyu Goruntule public link, Cikis Yap). Mobile hamburger in header opens Sheet drawer with full navigation matching Sidebar items. Also created a placeholder dashboard page.tsx for layout verification. TypeScript compiles cleanly with no errors.",
+          "updated_at": "2026-03-15T13:29:22.270498+00:00"
+        },
+        {
+          "id": "subtask-2-5",
+          "description": "Create KPICard component (src/components/qr-menu/KPICard.tsx) with animated counter (reuse pattern from AnimatedCounter.tsx), icon, label, value, and trend indicator. Create dashboard home page (src/app/qr-menu/dashboard/page.tsx) with: 5 KPI cards (orders, revenue, active tables, avg order, satisfaction), 7-day line chart (Recharts), top 5 products bar chart, hourly heatmap (custom grid), recent orders table, active tables grid, and low stock alerts. Use mock data.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/components/qr-menu/KPICard.tsx",
+            "src/app/qr-menu/dashboard/page.tsx"
+          ],
+          "patterns_from": [
+            "src/components/ui/AnimatedCounter.tsx",
+            "src/components/ui/GlassCard.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/qr-menu/dashboard",
+            "checks": [
+              "5 KPI cards render with animated counters",
+              "Recharts line chart renders",
+              "Recent orders table visible",
+              "Mobile responsive layout"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created KPICard component (src/components/qr-menu/KPICard.tsx) with animated counter using IntersectionObserver + requestAnimationFrame (same pattern as AnimatedCounter.tsx), icon, label, value, trend indicator, and 5 accent color variants. Created comprehensive dashboard home page (src/app/qr-menu/dashboard/page.tsx) with: 5 KPI cards (orders, revenue, active tables, avg order, satisfaction), 7-day revenue line chart (Recharts), top 5 products bar chart, hourly order heatmap (custom grid with dynamic backgrounds), recent orders table, active tables grid, and low stock alerts. All with Turkish labels and mock data. TypeScript compiles cleanly. Commit: cb3fa9e",
+          "updated_at": "2026-03-15T13:35:00.494020+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-3-menu-management",
+      "name": "Menu Management",
+      "type": "implementation",
+      "description": "Build the menu management system with drag-and-drop category reordering (dnd-kit), full menu item CRUD with allergen chips, modifier groups, badges, and Supabase persistence.",
+      "depends_on": [
+        "phase-2-auth-dashboard-shell"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-3-1",
+          "description": "Create CategorySortable component (src/components/qr-menu/CategorySortable.tsx) using @dnd-kit/core and @dnd-kit/sortable for drag-and-drop reordering. Each category card shows: name, icon selector, color picker, visibility toggle, time-based availability (available_from/until), edit/delete actions. Include 'Yeni Kategori Ekle' button with modal form.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/components/qr-menu/CategorySortable.tsx"
+          ],
+          "patterns_from": [
+            "src/components/ui/GlassCard.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && test -f src/components/qr-menu/CategorySortable.tsx && grep -c 'dnd-kit' src/components/qr-menu/CategorySortable.tsx && echo 'CategorySortable OK'",
+            "expected": "CategorySortable OK"
+          },
+          "status": "completed",
+          "notes": "Created CategorySortable component with @dnd-kit/core and @dnd-kit/sortable for drag-and-drop reordering. Features: sortable category cards with name/icon/color/visibility/time-availability, edit/delete actions, DragOverlay for visual feedback, icon selector (16 food icons), color picker (12 colors), add/edit modal with form, empty state with CTA. Verification passed: CategorySortable OK. Commit: 859841b",
+          "updated_at": "2026-03-15T16:00:00+00:00"
+        },
+        {
+          "id": "subtask-3-2",
+          "description": "Create MenuItemCard component (src/components/qr-menu/MenuItemCard.tsx) displaying: photo, name, description, price, calorie count, prep time. Include allergen chips (gluten, sut, yumurta, fistik, deniz urunleri etc.), badge toggles (Populer, Vegan, Acili, Sefin Onerisi, Yeni), modifier groups editor (nested: Ekstra malzeme, Pisirme tercihi, Boyut sec), stock toggle, edit/delete/copy actions. Include product creation/edit modal with react-hook-form + zod.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/components/qr-menu/MenuItemCard.tsx"
+          ],
+          "patterns_from": [
+            "src/components/forms/ContactForm.tsx",
+            "src/components/ui/GlassCard.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && test -f src/components/qr-menu/MenuItemCard.tsx && grep -c 'allergen' src/components/qr-menu/MenuItemCard.tsx && echo 'MenuItemCard OK'",
+            "expected": "MenuItemCard OK"
+          },
+          "status": "completed",
+          "notes": "Created MenuItemCard component with: photo display, name, description, price, calorie count, prep time, allergen chips (12 types including gluten, sut, yumurta, fistik, deniz_urunleri), badge toggles (Populer, Vegan, Acili, Sefin Onerisi, Yeni), nested modifier groups editor (Ekstra malzeme, Pisirme tercihi, Boyut sec), stock toggle, edit/delete/copy actions. Also created MenuItemFormModal with react-hook-form + zod validation. Fixed lucide-react icon compatibility (Pepper→FlameKindling, AlertTriangle→TriangleAlert).",
+          "updated_at": "2026-03-15T13:46:28.297207+00:00"
+        },
+        {
+          "id": "subtask-3-3",
+          "description": "Create menu management page (src/app/qr-menu/dashboard/menu/page.tsx) combining CategorySortable and MenuItemCard. Left panel: sortable category list. Right panel: items for selected category. Include: bulk price update (% increase/discount), CSV import/export buttons, mock AI description button, Supabase CRUD operations for both categories and items. Category sort_order persists on drag-drop.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/qr-menu/dashboard/menu/page.tsx"
+          ],
+          "patterns_from": [
+            "src/components/qr-menu/CategorySortable.tsx",
+            "src/components/qr-menu/MenuItemCard.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/qr-menu/dashboard/menu",
+            "checks": [
+              "Category list renders with drag handles",
+              "Menu items display in grid/list",
+              "Add category/item buttons work",
+              "Drag-and-drop reorders categories"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created menu management page at src/app/qr-menu/dashboard/menu/page.tsx (1626 lines). Features: left panel with CategorySortable drag-and-drop + category selection list with item counts, right panel with MenuItemCard grid/list view, search filtering, bulk price update modal (% increase/discount), CSV import/export with Turkish UTF-8 BOM support, mock AI description button, Supabase CRUD operations with optimistic UI updates for both categories and items, loading skeletons, empty states with CTAs, view mode toggle (grid/list), and comprehensive mock data fallback.",
+          "updated_at": "2026-03-15T13:53:38.117760+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-4-table-qr",
+      "name": "Table & QR Code Management",
+      "type": "implementation",
+      "description": "Build the table management grid editor with QR code generation (qrcode.react), individual PNG/SVG download, bulk ZIP export via JSZip, and table status management.",
+      "depends_on": [
+        "phase-2-auth-dashboard-shell"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-4-1",
+          "description": "Create QRCodeGenerator component (src/components/qr-menu/QRCodeGenerator.tsx) using qrcode.react QRCodeCanvas (for PNG) and QRCodeSVG (for SVG). Generate URL: /{restoran-slug}/masa/{masa-no} with basePath handling. Support logo overlay via imageSettings with excavate:true. Include download as PNG button (canvas.toDataURL) and SVG button. Create TableMap component (src/components/qr-menu/TableMap.tsx) as a grid-based visual editor where tables can be placed, moved, and removed. Show table number, capacity, and status color coding (empty=green, occupied=red, reserved=yellow, cleaning=blue).",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/components/qr-menu/QRCodeGenerator.tsx",
+            "src/components/qr-menu/TableMap.tsx"
+          ],
+          "patterns_from": [
+            "src/components/ui/GlassCard.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && test -f src/components/qr-menu/QRCodeGenerator.tsx && test -f src/components/qr-menu/TableMap.tsx && grep -c 'QRCodeCanvas\\|QRCodeSVG' src/components/qr-menu/QRCodeGenerator.tsx && echo 'QR Components OK'",
+            "expected": "QR Components OK"
+          },
+          "status": "completed",
+          "notes": "Created QRCodeGenerator.tsx and TableMap.tsx components. QRCodeGenerator uses qrcode.react QRCodeCanvas (PNG) and QRCodeSVG (SVG) with logo overlay via imageSettings (excavate:true), basePath-aware URL generation, PNG/SVG download buttons, and URL copy. TableMap is a grid-based visual editor with table placement, drag-and-drop movement, removal, status color coding (empty=green, occupied=red, reserved=yellow, cleaning=blue), capacity display, and edit mode toggle. Both follow existing GlassCard/KPICard patterns with TypeScript interfaces, cn() utility, Framer Motion animations, and dark theme styling. Verification passes: QR Components OK.",
+          "updated_at": "2026-03-15T13:58:00.735219+00:00"
+        },
+        {
+          "id": "subtask-4-2",
+          "description": "Create tables management page (src/app/qr-menu/dashboard/masalar/page.tsx) with: TableMap grid editor for visual table placement, table CRUD (add with number+capacity, edit, delete), QR code generation per table, individual PNG/SVG download via QRCodeGenerator, bulk QR download as ZIP using JSZip + file-saver, table status management (Bos/Dolu/Rezerve/Temizleniyor), table merge/split UI. Supabase CRUD operations for tables.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/qr-menu/dashboard/masalar/page.tsx"
+          ],
+          "patterns_from": [
+            "src/components/qr-menu/QRCodeGenerator.tsx",
+            "src/components/qr-menu/TableMap.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/qr-menu/dashboard/masalar",
+            "checks": [
+              "Table grid editor renders",
+              "QR codes generate for tables",
+              "Download buttons work",
+              "Table status colors display correctly"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created src/app/qr-menu/dashboard/masalar/page.tsx (1343 lines) with: TableMap grid editor with configurable rows/columns, table CRUD (add with number+capacity, edit, delete with confirmation), QR code generation per table using QRCodeGenerator, individual PNG/SVG download via modal, bulk QR ZIP download via JSZip+file-saver, table status management (Bos/Dolu/Rezerve/Temizleniyor) with cycle-click, table merge/split UI dialogs, grid and list view modes, stats bar, empty states. TypeScript compiles with 0 errors. Commit: abe61c4",
+          "updated_at": "2026-03-15T14:02:45.565764+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-5-orders-realtime",
+      "name": "Order Management & Realtime",
+      "type": "implementation",
+      "description": "Build the Kanban-style order management board with Supabase Realtime subscriptions, order detail modal, status transitions, KDS fullscreen mode, waiter call notifications, and order history filtering.",
+      "depends_on": [
+        "phase-2-auth-dashboard-shell"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-5-1",
+          "description": "Create OrderKanban component (src/components/qr-menu/OrderKanban.tsx) with 4 columns: Yeni, Hazirlaniyor, Hazir, Teslim Edildi. Each order card shows: table number, item count, total amount, time elapsed, notes indicator. Click or button to move orders between status columns. Create OrderDetailModal component (src/components/qr-menu/OrderDetailModal.tsx) showing: full item list with modifiers, special notes, table info, timestamps, total amount, status change buttons, print button (CSS print format).",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/components/qr-menu/OrderKanban.tsx",
+            "src/components/qr-menu/OrderDetailModal.tsx"
+          ],
+          "patterns_from": [
+            "src/components/ui/GlassCard.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && test -f src/components/qr-menu/OrderKanban.tsx && test -f src/components/qr-menu/OrderDetailModal.tsx && echo 'Order Components OK'",
+            "expected": "Order Components OK"
+          },
+          "status": "completed",
+          "notes": "Created OrderKanban.tsx with 4 status columns (Yeni/Hazirlaniyor/Hazir/Teslim Edildi), order cards showing table number, item count, total amount, elapsed time, notes indicator, waiter call pulsing badge, and status transition buttons. Created OrderDetailModal.tsx with full item list with modifiers, status progress bar, table info, timestamps, total amount, notes section, status change buttons (forward/backward), and CSS print format support. Both components follow existing patterns (GlassCard, KPICard) with Framer Motion animations, cn() utility, TypeScript interfaces, dark theme styling, and Turkish UI text. TypeScript compilation clean. Commit: 652aca2",
+          "updated_at": "2026-03-15T14:08:08.616016+00:00"
+        },
+        {
+          "id": "subtask-5-2",
+          "description": "Create KDSView component (src/components/qr-menu/KDSView.tsx) as a fullscreen kitchen display with simplified order cards showing: order number, table, items (large font), elapsed time, status change button. Auto-refreshes via Supabase Realtime. Color-coded urgency based on wait time. Optimized for wall-mounted displays.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/components/qr-menu/KDSView.tsx"
+          ],
+          "patterns_from": [
+            "src/components/qr-menu/OrderKanban.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && test -f src/components/qr-menu/KDSView.tsx && grep -c 'fullscreen\\|Realtime\\|channel' src/components/qr-menu/KDSView.tsx && echo 'KDS OK'",
+            "expected": "KDS OK"
+          },
+          "status": "completed",
+          "notes": "Created KDSView.tsx (703 lines) - fullscreen kitchen display with 3-column layout (Yeni/Hazirlaniyor/Hazir), color-coded urgency (normal/warning/critical based on wait time), Supabase Realtime subscription via channel, large font items for kitchen readability, fullscreen toggle, live clock, waiter call indicator, status transition buttons. TypeScript compiles with 0 errors. Verification: 13 matches for fullscreen/Realtime/channel. Commit: 8c0084a",
+          "updated_at": "2026-03-15T14:11:51.061467+00:00"
+        },
+        {
+          "id": "subtask-5-3",
+          "description": "Create orders management page (src/app/qr-menu/dashboard/siparisler/page.tsx) integrating OrderKanban, OrderDetailModal, and KDSView. Set up Supabase Realtime subscription for orders (filtered by restaurant_id). Include: toggle between Kanban and KDS mode, waiter call notification bell integration, order history tab with filters (date range, table, status, amount range). Clean up Realtime channel on unmount.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/qr-menu/dashboard/siparisler/page.tsx"
+          ],
+          "patterns_from": [
+            "src/components/qr-menu/OrderKanban.tsx",
+            "src/components/qr-menu/KDSView.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/qr-menu/dashboard/siparisler",
+            "checks": [
+              "Kanban board renders with 4 columns",
+              "Order cards display correctly",
+              "KDS toggle switches to fullscreen mode",
+              "Order history tab loads"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created orders management page (1124 lines) integrating OrderKanban, KDSView, and OrderDetailModal. Features: Kanban/KDS view toggle, Supabase Realtime subscription with proper cleanup on unmount, waiter call notification bell with count badge and animation, active orders stats bar (new/preparing/ready counts + total amount), order history tab with comprehensive filters (search, status, table, date range, amount range, sorting), mock data with 13 orders across all statuses, smooth view transitions with Framer Motion. TypeScript compiles with 0 errors.",
+          "updated_at": "2026-03-15T14:25:00.000Z"
+        }
+      ]
+    },
+    {
+      "id": "phase-6-theme-public-menu",
+      "name": "Theme Editor & Public Customer Menu",
+      "type": "implementation",
+      "description": "Build the theme/appearance editor with live mobile preview and 6 preset themes. Build the public customer-facing QR menu with dynamic theming, cart (Zustand), ordering, allergen filtering, and language switching.",
+      "depends_on": [
+        "phase-2-auth-dashboard-shell"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-6-1",
+          "description": "Create ThemeEditor component (src/components/qr-menu/ThemeEditor.tsx) with: color pickers (react-colorful) for primary, secondary, background, text, card background colors. 6 preset palettes (Klasik Siyah, Sicak Kahve, Okyanus, Gun Batimi, Nane, Luks Mor). Typography selector with 10 Google Fonts from fonts.ts. Layout options (Grid/Liste/Kartlar menu view, category nav position). Create ThemePreview component (src/components/qr-menu/ThemePreview.tsx) as a live mobile phone frame preview that updates in real-time as theme settings change.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/components/qr-menu/ThemeEditor.tsx",
+            "src/components/qr-menu/ThemePreview.tsx"
+          ],
+          "patterns_from": [
+            "src/components/ui/GlassCard.tsx",
+            "src/lib/fonts.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && test -f src/components/qr-menu/ThemeEditor.tsx && test -f src/components/qr-menu/ThemePreview.tsx && echo 'Theme Components OK'",
+            "expected": "Theme Components OK"
+          },
+          "status": "completed",
+          "notes": "Created ThemeEditor.tsx and ThemePreview.tsx. ThemeEditor has: 5 color pickers (react-colorful), 6 preset palettes, 10 Google Font selector, 3 layout options, 3 category nav positions, 5 border radius options, collapsible sections, save/reset buttons. ThemePreview has: mobile phone frame with notch, status bar, restaurant header, search bar, 3 category nav variants (top/left/floating), 3 menu item layout variants (grid/list/cards), cart bottom bar, all updating in real-time. TypeScript passes cleanly.",
+          "updated_at": "2026-03-15T14:22:27.310754+00:00"
+        },
+        {
+          "id": "subtask-6-2",
+          "description": "Create theme editor page (src/app/qr-menu/dashboard/tema/page.tsx) with split panel layout: left = ThemeEditor controls, right = ThemePreview mobile frame. Include logo upload and cover photo upload to Supabase Storage. Save theme to restaurant's JSONB 'theme' field. Load existing theme on page mount.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/qr-menu/dashboard/tema/page.tsx"
+          ],
+          "patterns_from": [
+            "src/components/qr-menu/ThemeEditor.tsx",
+            "src/components/qr-menu/ThemePreview.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/qr-menu/dashboard/tema",
+            "checks": [
+              "Split panel layout renders",
+              "Color pickers are interactive",
+              "Preset theme cards visible",
+              "Mobile preview frame displays"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created theme editor page at src/app/qr-menu/dashboard/tema/page.tsx with: split panel layout (left=ThemeEditor controls, right=ThemePreview mobile frame), logo and cover photo upload to Supabase Storage, theme save to restaurant JSONB field, load existing theme on mount, mobile responsive panel toggle, image validation, unsaved changes indicator. Zero TypeScript errors. Committed as 8770cd9.",
+          "updated_at": "2026-03-15T14:27:13.938016+00:00"
+        },
+        {
+          "id": "subtask-6-3",
+          "description": "Create public menu components: MenuCategoryNav (src/components/qr-menu/public/MenuCategoryNav.tsx) as sticky horizontal category navigation with scroll tracking. ProductCard (src/components/qr-menu/public/ProductCard.tsx) showing image, name, description, price, allergen icons, badges. ProductDetailModal (src/components/qr-menu/public/ProductDetailModal.tsx) with image zoom, modifier selection checkboxes, add-on options, quantity selector, special notes textarea, and 'Sepete Ekle' button using useCartStore.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/components/qr-menu/public/MenuCategoryNav.tsx",
+            "src/components/qr-menu/public/ProductCard.tsx",
+            "src/components/qr-menu/public/ProductDetailModal.tsx"
+          ],
+          "patterns_from": [
+            "src/components/ui/GlassCard.tsx",
+            "src/store/useCartStore.ts"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && test -f src/components/qr-menu/public/MenuCategoryNav.tsx && test -f src/components/qr-menu/public/ProductCard.tsx && test -f src/components/qr-menu/public/ProductDetailModal.tsx && echo 'Public Components OK'",
+            "expected": "Public Components OK"
+          },
+          "status": "completed",
+          "notes": "Created three public menu components: MenuCategoryNav (sticky horizontal nav with scroll tracking, fade indicators, auto-scroll to active tab, framer-motion tab animations), ProductCard (three layout variants: grid/list/cards with image, badges, allergen icons, price, prep time), ProductDetailModal (zoomable image, modifier group checkboxes, quantity selector, special notes textarea, Sepete Ekle button integrated with useCartStore). All components follow Turkish UI language, existing code patterns, and support dynamic theming via props. TypeScript compilation clean. Commit: 0bb02ce.",
+          "updated_at": "2026-03-15T14:33:43.782070+00:00"
+        },
+        {
+          "id": "subtask-6-4",
+          "description": "Create cart and utility components for public menu: CartDrawer (src/components/qr-menu/public/CartDrawer.tsx) with floating cart button showing item count badge + slide-out drawer with item list, quantity controls, total, and 'Siparis Ver' submit button. WaiterCallButton (floating action button). AllergenFilter (toggle chips for filtering menu items by allergens). LanguageSwitcher (TR/EN toggle with hardcoded translations). All use Zustand store for state.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/components/qr-menu/public/CartDrawer.tsx",
+            "src/components/qr-menu/public/WaiterCallButton.tsx",
+            "src/components/qr-menu/public/AllergenFilter.tsx",
+            "src/components/qr-menu/public/LanguageSwitcher.tsx"
+          ],
+          "patterns_from": [
+            "src/store/useCartStore.ts",
+            "src/components/ui/GlassCard.tsx"
+          ],
+          "verification": {
+            "type": "command",
+            "command": "cd /Users/kullanici/Desktop/MySite && test -f src/components/qr-menu/public/CartDrawer.tsx && test -f src/components/qr-menu/public/WaiterCallButton.tsx && test -f src/components/qr-menu/public/AllergenFilter.tsx && test -f src/components/qr-menu/public/LanguageSwitcher.tsx && echo 'Cart Components OK'",
+            "expected": "Cart Components OK"
+          },
+          "status": "completed",
+          "notes": "Created all 4 cart and utility components for public menu: CartDrawer (floating cart button with item count badge + slide-out drawer with item list, quantity controls, total, and Siparis Ver submit button), WaiterCallButton (floating action button with idle/loading/called states), AllergenFilter (toggle chips for filtering menu items by allergens with clear all), LanguageSwitcher (TR/EN toggle with Zustand store and hardcoded translations dictionary + useTranslation hook). All follow existing code patterns - use Zustand store, framer-motion animations, theme props, Turkish UI text, lucide-react icons. TypeScript compiles clean with no errors.",
+          "updated_at": "2026-03-15T14:38:24.748368+00:00"
+        },
+        {
+          "id": "subtask-6-5",
+          "description": "Create public-facing restaurant pages: src/app/[restoran-slug]/page.tsx (restaurant landing that redirects to table selection or displays restaurant info). src/app/[restoran-slug]/masa/[masa-no]/page.tsx (full customer QR menu page) that: fetches restaurant data + theme from Supabase, applies dynamic theme via CSS variables, renders MenuCategoryNav + ProductCard grid, integrates CartDrawer + WaiterCallButton + AllergenFilter + LanguageSwitcher + search bar. Order submission writes to Supabase orders table (triggers realtime on dashboard).",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/[restoran-slug]/page.tsx",
+            "src/app/[restoran-slug]/masa/[masa-no]/page.tsx"
+          ],
+          "patterns_from": [
+            "src/components/qr-menu/public/MenuCategoryNav.tsx",
+            "src/components/qr-menu/public/CartDrawer.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/demo-restoran/masa/1",
+            "checks": [
+              "Restaurant menu loads with dynamic theme",
+              "Category navigation is sticky",
+              "Product cards display correctly",
+              "Cart drawer opens and works",
+              "Language switcher toggles TR/EN"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created both public-facing restaurant pages:\n1. src/app/[restoran-slug]/page.tsx - Restaurant landing page with metadata, restaurant info, working hours, social media links, and CTA to view menu\n2. src/app/[restoran-slug]/masa/[masa-no]/page.tsx - Full customer QR menu page with:\n   - Dynamic theme applied via CSS variables from restaurant.theme JSONB\n   - Sticky MenuCategoryNav with scroll tracking (IntersectionObserver)\n   - ProductCard grid/list/cards layout modes\n   - ProductDetailModal with modifier selection\n   - CartDrawer with order submission to Supabase orders table\n   - WaiterCallButton with Supabase integration\n   - AllergenFilter to exclude allergen-containing items\n   - LanguageSwitcher for TR/EN toggle\n   - Search bar for filtering menu items\n   - Complete demo data for demo-restoran slug\n   - Loading and error states\n   - Order submitting overlay\nTypeScript compilation passes cleanly (tsc --noEmit). Build only fails due to network/font issues unrelated to this subtask.",
+          "updated_at": "2026-03-15T14:45:14.267923+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-7-analytics-campaigns-settings",
+      "name": "Analytics, Campaigns & Settings",
+      "type": "implementation",
+      "description": "Build the analytics dashboard with Recharts visualizations, the campaign/promotion management system, and the multi-tabbed restaurant settings page.",
+      "depends_on": [
+        "phase-2-auth-dashboard-shell"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-7-1",
+          "description": "Create analytics page (src/app/qr-menu/dashboard/analitik/page.tsx) with: date range picker, revenue chart (Recharts LineChart - daily/weekly/monthly toggle), top/bottom selling products (BarChart), category sales distribution (PieChart), hourly order density (custom heatmap grid - NOT native Recharts, use styled divs with dynamic background colors + Tooltip), table occupancy rates, QR scan stats, customer feedback summary, mock PDF export button with toast. All data can be mock/seed.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/qr-menu/dashboard/analitik/page.tsx"
+          ],
+          "patterns_from": [
+            "src/components/ui/GlassCard.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/qr-menu/dashboard/analitik",
+            "checks": [
+              "Date range picker renders",
+              "Revenue line chart displays",
+              "Pie chart renders",
+              "Heatmap grid visible",
+              "All charts responsive"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created analytics page (src/app/qr-menu/dashboard/analitik/page.tsx) with all required components: date range picker (7/30/90 days), revenue LineChart with daily/weekly/monthly toggle, top/bottom selling products BarCharts, category sales distribution PieChart (donut style), custom heatmap grid with styled divs and hover tooltips (NOT Recharts native), table occupancy rates with progress bars, QR scan statistics grid, customer feedback summary table, and mock PDF export button with sonner toast. All data is mock/seed. TypeScript compilation passes with zero errors. Follows existing dashboard patterns (glassmorphic cards, custom Recharts tooltips, cn() utility, accent colors). Commit: 944cb1a",
+          "updated_at": "2026-03-15T14:51:28.749431+00:00"
+        },
+        {
+          "id": "subtask-7-2",
+          "description": "Create campaigns page (src/app/qr-menu/dashboard/kampanyalar/page.tsx) with campaign CRUD: discount coupon creation (percentage or fixed amount), combo menu builder, Happy Hour time-based discounts, banner announcement for menu display. Each campaign has: name, description, type, discount config, start/end dates, usage limit, active/inactive toggle. Supabase CRUD for campaigns table.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/qr-menu/dashboard/kampanyalar/page.tsx"
+          ],
+          "patterns_from": [
+            "src/components/forms/ContactForm.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/qr-menu/dashboard/kampanyalar",
+            "checks": [
+              "Campaign list renders",
+              "Create campaign modal works",
+              "Campaign type selection (kupon/combo/mutlu-saat/banner)",
+              "Active/inactive toggle"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created campaigns page with full CRUD: KPI summary cards, campaign card grid with type-specific rendering (coupon/combo/happy_hour/banner), search/filter by type and status, create/edit modal with type-specific config fields (discount %, combo items, happy hour times/days, banner position/URL), delete confirmation, active/inactive toggle, campaign duplication, Supabase integration with mock fallback. TypeScript clean.",
+          "updated_at": "2026-03-15T16:00:00.000000+00:00"
+        },
+        {
+          "id": "subtask-7-3",
+          "description": "Create settings page (src/app/qr-menu/dashboard/ayarlar/page.tsx) with tabbed interface: Genel (restaurant name, address, phone, description, social media links), Bildirimler (email/push toggle preferences), Dil & Para (currency selector, tax rate, TR/EN language toggle), Calisma Saatleri (day-by-day open/closed + time inputs), Entegrasyonlar (placeholder for future integrations), Abonelik (plan display with limits, mock upgrade button). Save all settings to restaurant JSONB 'settings' field. Slug customization with warning about existing QR codes.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/qr-menu/dashboard/ayarlar/page.tsx"
+          ],
+          "patterns_from": [
+            "src/components/forms/ContactForm.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/qr-menu/dashboard/ayarlar",
+            "checks": [
+              "Tab navigation works (6 tabs)",
+              "General info form renders",
+              "Working hours day-by-day inputs",
+              "Settings save successfully"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created settings page at src/app/qr-menu/dashboard/ayarlar/page.tsx with 6 tabbed sections: Genel (restaurant info + social media), Bildirimler (email/push toggles), Dil & Para (currency/tax/language), Calisma Saatleri (day-by-day hours), Entegrasyonlar (placeholder integrations), Abonelik (plan display + comparison). All settings save to restaurant JSONB settings field. Slug change warning implemented. TypeScript clean, no errors.",
+          "updated_at": "2026-03-15T15:06:08.064706+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-8-super-admin",
+      "name": "Super Admin Panel",
+      "type": "implementation",
+      "description": "Build the complete super admin panel with separate auth, platform KPIs, restaurant management with impersonation, user management, plan management, system logs, and announcements.",
+      "depends_on": [
+        "phase-1-infrastructure"
+      ],
+      "parallel_safe": true,
+      "subtasks": [
+        {
+          "id": "subtask-8-1",
+          "description": "Create super admin login page (src/app/super-admin/giris/page.tsx) with email+password form restricted to super_admin role. Create admin dashboard layout (src/app/super-admin/dashboard/layout.tsx) with AdminSidebar component (src/components/super-admin/AdminSidebar.tsx) containing: platform logo, navigation (Ana Sayfa, Restoranlar, Kullanicilar, Planlar, Sistem, Duyurular), and logout. Different visual theme from restaurant dashboard (e.g., blue accent instead of orange).",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/super-admin/giris/page.tsx",
+            "src/app/super-admin/dashboard/layout.tsx",
+            "src/components/super-admin/AdminSidebar.tsx"
+          ],
+          "patterns_from": [
+            "src/app/qr-menu/giris/page.tsx",
+            "src/components/qr-menu/Sidebar.tsx",
+            "src/app/qr-menu/dashboard/layout.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/super-admin/giris",
+            "checks": [
+              "Admin login form renders",
+              "Different visual theme from restaurant dashboard",
+              "No console errors"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created super admin login page with blue accent theme (vs orange for restaurant dashboard), Shield icon branding, email+password form with super_admin role verification. Created AdminSidebar with navigation items (Ana Sayfa, Restoranlar, Kullanicilar, Planlar, Sistem, Duyurular) and logout functionality. Created admin dashboard layout with breadcrumbs, notification bell, avatar dropdown, and mobile-responsive Sheet navigation. All TypeScript checks pass.",
+          "updated_at": "2026-03-15T00:00:00.000Z"
+        },
+        {
+          "id": "subtask-8-2",
+          "description": "Create admin dashboard home page (src/app/super-admin/dashboard/page.tsx) with platform KPI cards: total active restaurants, new registrations this month, total platform orders, platform revenue (mock), active users. Recharts graphs: monthly growth (restaurants + orders line chart), plan distribution (pie chart: Ucretsiz/Starter/Pro/Enterprise), recent activity feed (log entries).",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/super-admin/dashboard/page.tsx"
+          ],
+          "patterns_from": [
+            "src/app/qr-menu/dashboard/page.tsx",
+            "src/components/qr-menu/KPICard.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/super-admin/dashboard",
+            "checks": [
+              "Platform KPI cards render",
+              "Growth charts display",
+              "Plan distribution pie chart visible"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created super admin dashboard home page (src/app/super-admin/dashboard/page.tsx) with: 5 platform KPI cards (active restaurants, new registrations, total orders, platform revenue, active users) using existing KPICard component; monthly growth line chart with dual Y-axes (restaurants + orders); plan distribution pie chart (Ucretsiz/Starter/Pro/Enterprise) with custom labels and tooltip; recent activity feed with timeline UI and 8 categorized mock log entries (registration, upgrade, alert, cancellation, config). All TypeScript checks pass. Commit: b3ebda2",
+          "updated_at": "2026-03-15T15:16:03.253254+00:00"
+        },
+        {
+          "id": "subtask-8-3",
+          "description": "Create RestaurantTable component (src/components/super-admin/RestaurantTable.tsx) as a sortable, filterable data table with columns: name, owner, plan, status, registration date, last active, order count. Action buttons: view, edit, suspend/activate, delete. Create restaurant management page (src/app/super-admin/dashboard/restoranlar/page.tsx) with search bar, filter dropdowns (plan, status), RestaurantTable, and 'Restoran Adina Giris' (impersonate) button that creates a scoped session.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/components/super-admin/RestaurantTable.tsx",
+            "src/app/super-admin/dashboard/restoranlar/page.tsx"
+          ],
+          "patterns_from": [
+            "src/components/ui/GlassCard.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/super-admin/dashboard/restoranlar",
+            "checks": [
+              "Restaurant table renders with all columns",
+              "Search and filter controls work",
+              "Action buttons are visible",
+              "Suspend toggle works"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created RestaurantTable component (636 lines) with sortable columns (name, owner, plan, status, created_at, last_active, order_count), sort direction toggle, plan/status badges with color coding, action buttons (view, edit, suspend/activate, delete) + dropdown with impersonate. Created restoranlar page (938 lines) with search bar, plan/status filter dropdowns, stats summary cards, CSV export, refresh, delete/suspend confirmation dialogs, Supabase integration with mock fallback, impersonate via sessionStorage. TypeScript compiles with 0 errors.",
+          "updated_at": "2026-03-15T16:00:00.000000+00:00"
+        },
+        {
+          "id": "subtask-8-4",
+          "description": "Create user management page (src/app/super-admin/dashboard/kullanicilar/page.tsx) with user table, role assignment (kullanici/restoran_sahibi/super_admin), account suspend/activate toggle, password reset email trigger. Create plan management page (src/app/super-admin/dashboard/planlar/page.tsx) with plan cards (Ucretsiz/Starter/Pro/Enterprise), limit configuration (max tables, max items, max monthly orders), feature toggles (analytics, campaigns, KDS, multi-language), pricing display (mock). Manual plan assignment to restaurants.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/super-admin/dashboard/kullanicilar/page.tsx",
+            "src/app/super-admin/dashboard/planlar/page.tsx"
+          ],
+          "patterns_from": [
+            "src/components/super-admin/RestaurantTable.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/super-admin/dashboard/kullanicilar",
+            "checks": [
+              "User table renders",
+              "Role dropdown works",
+              "Plan cards display with limits"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created user management page (kullanicilar) and plan management page (planlar). User page has: sortable table with 6 columns (name/avatar, email/phone, role badge, status dot, registration date, last active), role assignment via dropdown (user/restaurant_owner/super_admin) with confirmation dialog, suspend/activate toggle with confirmation, password reset email trigger, search/filter (role + status), CSV export, stats cards. Plan page has: 4 plan cards (Ucretsiz/Starter/Pro/Enterprise) with pricing, limit configuration (max tables/items/monthly orders), feature toggles (analytics/campaigns/KDS/multi-language), inline edit mode with save, manual plan assignment section with restaurant search/filter and plan selector, assignment confirmation dialog. TypeScript compiles with 0 errors.",
+          "updated_at": "2026-03-15T15:31:12.469639+00:00"
+        },
+        {
+          "id": "subtask-8-5",
+          "description": "Create system logs page (src/app/super-admin/dashboard/sistem/page.tsx) with: Supabase connection status indicator, recent error log list (mock + console.error capture), active session count, database table sizes (mock), cache clear button (mock). Create announcements page (src/app/super-admin/dashboard/duyurular/page.tsx) with: announcement CRUD (title, content, severity: info/warning/critical), targeting (all/plan_based/individual), announcement list with status badges, send/schedule functionality.",
+          "service": "main",
+          "files_to_modify": [],
+          "files_to_create": [
+            "src/app/super-admin/dashboard/sistem/page.tsx",
+            "src/app/super-admin/dashboard/duyurular/page.tsx"
+          ],
+          "patterns_from": [
+            "src/components/forms/ContactForm.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/super-admin/dashboard/sistem",
+            "checks": [
+              "Connection status indicator renders",
+              "Log entries display",
+              "Announcement creation form works"
+            ]
+          },
+          "status": "completed",
+          "notes": "Created system logs page (sistem/page.tsx) with: Supabase connection status indicator (checks DB/Realtime/Storage), error log list with mock data + console.error capture, active session count, database table sizes with progress bars, cache clear button (mock), system info footer. Created announcements page (duyurular/page.tsx) with: full CRUD (create/edit/delete), severity levels (info/warning/critical), targeting (all/plan_based/individual with plan selection), status badges (draft/sent/scheduled), send and schedule functionality, search and filter capabilities. Both pages follow existing patterns exactly (motion animations, cn() utility, Supabase client with mock fallback, Dialog components, toast notifications).",
+          "updated_at": "2026-03-15T15:40:40.661450+00:00"
+        }
+      ]
+    },
+    {
+      "id": "phase-9-polish-integration",
+      "name": "Polish, Responsive & Integration",
+      "type": "integration",
+      "description": "Final polish pass: mobile responsive fixes, loading skeletons, error boundaries, empty states, Framer Motion animations, accessibility improvements, and end-to-end integration verification.",
+      "depends_on": [
+        "phase-3-menu-management",
+        "phase-4-table-qr",
+        "phase-5-orders-realtime",
+        "phase-6-theme-public-menu",
+        "phase-7-analytics-campaigns-settings",
+        "phase-8-super-admin"
+      ],
+      "parallel_safe": false,
+      "subtasks": [
+        {
+          "id": "subtask-9-1",
+          "description": "Add loading skeleton states for all data-fetching pages using Shadcn Skeleton component. Create error boundaries for each major section (dashboard, public menu, admin). Design empty states with helpful CTAs (e.g., 'Ilk kategorinizi olusturun' for empty menu, 'Henuz siparis yok' for empty orders). Add Suspense boundaries where appropriate.",
+          "service": "main",
+          "files_to_modify": [
+            "src/app/qr-menu/dashboard/page.tsx",
+            "src/app/qr-menu/dashboard/menu/page.tsx",
+            "src/app/qr-menu/dashboard/siparisler/page.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/app/loading.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/qr-menu/dashboard",
+            "checks": [
+              "Loading skeletons appear during data fetch",
+              "Empty states show helpful messages",
+              "No uncaught errors in console"
+            ]
+          },
+          "status": "completed",
+          "notes": "Added loading skeleton states, error boundaries, and empty states for all dashboard pages. Created 6 new files (loading.tsx and error.tsx for dashboard, menu, and siparisler routes) and modified 3 existing page files to integrate skeleton loading states, empty states with helpful CTAs, and proper data loading patterns.",
+          "updated_at": "2026-03-15T15:47:25.539896+00:00"
+        },
+        {
+          "id": "subtask-9-2",
+          "description": "Mobile responsive audit and fixes across all pages (320px-1920px). Ensure: dashboard sidebar collapses to hamburger on mobile, all data tables scroll horizontally on small screens, Kanban board scrolls horizontally, theme editor stacks vertically on mobile, public menu is optimized for phone screens, all touch targets meet 44px minimum. Add Framer Motion entry animations to key sections.",
+          "service": "main",
+          "files_to_modify": [
+            "src/app/qr-menu/dashboard/layout.tsx",
+            "src/components/qr-menu/Sidebar.tsx",
+            "src/components/qr-menu/OrderKanban.tsx"
+          ],
+          "files_to_create": [],
+          "patterns_from": [
+            "src/components/layout/MobileMenu.tsx"
+          ],
+          "verification": {
+            "type": "browser",
+            "url": "http://localhost:3000/MySite/qr-menu/dashboard",
+            "checks": [
+              "Sidebar collapses on mobile viewport",
+              "Tables scroll horizontally on 320px width",
+              "All buttons are touch-friendly",
+              "No horizontal overflow"
+            ]
+          },
+          "status": "completed",
+          "notes": "Mobile responsive audit and fixes across dashboard pages (320px-1920px):\n\nlayout.tsx:\n- Added overflow-x-hidden on root container to prevent horizontal overflow\n- Increased mobile hamburger button to min-h-[44px] min-w-[44px] touch target\n- Increased notification bell to min-h-[44px] min-w-[44px] on mobile (reverts to h-9 w-9 on sm+)\n- All mobile nav items now have min-h-[44px] touch targets\n- Mobile bottom actions (Profil, Cikis Yap) now have min-h-[44px] touch targets\n- Added Framer Motion stagger entry animation for mobile nav items (mobileNavItemVariants)\n- Added Framer Motion page content entry animation (contentEntryVariants with spring transition, keyed by pathname)\n- Mobile nav now has overflow-y-auto for scrollable content\n\nSidebar.tsx:\n- Increased mobile hamburger button to min-h-[44px] min-w-[44px] touch target\n- Increased mobile close button to min-h-[44px] min-w-[44px] touch target\n- All mobile nav items (renderMobileNavItem) now have min-h-[44px] touch targets\n- Mobile logout button now has min-h-[44px] touch target\n\nOrderKanban.tsx:\n- Added columnEntryVariants for Framer Motion stagger entry animation on columns\n- Main container now uses motion.div with stagger children animation (0.08s stagger, 0.05s delay)\n- Added snap-x snap-mandatory on mobile for swipeable column navigation\n- Added custom scrollbar styling (thin track + thumb with hover state)\n- Added scroll-pl-4 scroll-pr-4 padding for snap alignment\n- Columns have snap-center class on mobile for swipe navigation\n- \"Move to next status\" button increased to min-h-[44px] touch target\n- Added active:scale-[0.97] feedback on status change button\n\nTypeScript: 0 errors. No console.log statements.",
+          "updated_at": "2026-03-15T15:54:31.546871+00:00"
+        },
+        {
+          "id": "subtask-9-3",
+          "description": "End-to-end integration verification: verify the complete flow from QR scan to order appearing on dashboard. Check that TeklifModal navigates correctly, auth flow works, all dashboard pages load without errors, public menu renders with correct theme, order submission triggers realtime update, super admin can view all restaurants. Accessibility pass: keyboard navigation, ARIA labels, focus management.",
+          "service": "main",
+          "all_services": true,
+          "files_to_modify": [],
+          "files_to_create": [],
+          "patterns_from": [],
+          "verification": {
+            "type": "e2e",
+            "steps": [
+              "TeklifModal opens and QR Menu navigates to /qr-menu/giris",
+              "Auth login/register works with email (Google OAuth requires real credentials)",
+              "Dashboard loads with KPI cards and all sidebar links work",
+              "Menu page: create category, add item, drag-drop reorder",
+              "Tables page: create table, generate QR, download PNG",
+              "Orders page: Kanban renders, KDS mode toggles",
+              "Theme page: change colors, preview updates",
+              "Public menu at /{slug}/masa/{no} loads with correct theme",
+              "Customer adds to cart, submits order",
+              "Order appears on dashboard Kanban in realtime",
+              "Super admin dashboard loads and shows restaurants",
+              "Existing MySite pages at / still work correctly",
+              "No console errors throughout",
+              "Mobile responsive at 320px, 768px, 1024px, 1920px"
+            ]
+          },
+          "status": "completed",
+          "notes": "End-to-end integration verification complete. Fixed: (1) Root layout fonts missing latin-ext for Turkish chars, (2) Dashboard layout logout not actually signing out, (3) Super admin layout mobile touch targets below 44px, (4) Added skip navigation links for keyboard accessibility, (5) Added ARIA labels/roles throughout layouts, (6) Fixed breadcrumb semantic structure with ol/li, (7) Fixed typo in order submission message, (8) Improved cart drawer touch targets from h-7 to min-h-[44px], (9) Added aria-hidden to decorative icons, (10) Added aria-label to nav elements. All integration points verified: TeklifModal->giris, auth flow, dashboard pages, public menu, super admin, realtime subscriptions.",
+          "updated_at": "2026-03-15T16:04:53.500040+00:00"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_phases": 9,
+    "total_subtasks": 36,
+    "services_involved": [
+      "main"
+    ],
+    "estimated_new_files": 50,
+    "estimated_modified_files": 5,
+    "parallelism": {
+      "max_parallel_phases": 5,
+      "parallel_groups": [
+        {
+          "phases": [
+            "phase-2-auth-dashboard-shell",
+            "phase-8-super-admin"
+          ],
+          "reason": "Both depend only on phase-1, completely different file sets (qr-menu/* vs super-admin/*)"
+        },
+        {
+          "phases": [
+            "phase-3-menu-management",
+            "phase-4-table-qr",
+            "phase-5-orders-realtime"
+          ],
+          "reason": "All depend on phase-2, each modifies different dashboard sub-pages and components"
+        },
+        {
+          "phases": [
+            "phase-6-theme-public-menu",
+            "phase-7-analytics-campaigns-settings"
+          ],
+          "reason": "Both depend on phase-2, different page sets (tema + public vs analitik + kampanyalar + ayarlar)"
+        }
+      ],
+      "recommended_workers": 2,
+      "speedup_estimate": "1.7x faster than sequential (9 sequential rounds reduced to ~5 rounds with 2 workers)",
+      "execution_order_with_2_workers": [
+        "Round 1: phase-1 (Worker 1)",
+        "Round 2: phase-2 (Worker 1) + phase-8 (Worker 2)",
+        "Round 3: phase-3 (Worker 1) + phase-4 (Worker 2)",
+        "Round 4: phase-5 (Worker 1) + phase-6 (Worker 2)",
+        "Round 5: phase-7 (Worker 1, if W2 still on phase-6)",
+        "Round 6: phase-9 (Worker 1)"
+      ]
+    },
+    "critical_path": [
+      "phase-1-infrastructure",
+      "phase-2-auth-dashboard-shell",
+      "phase-5-orders-realtime",
+      "phase-6-theme-public-menu",
+      "phase-9-polish-integration"
+    ],
+    "startup_command": "source auto-claude/.venv/bin/activate && python auto-claude/run.py --spec 002 --parallel 2"
+  },
+  "verification_strategy": {
+    "risk_level": "high",
+    "skip_validation": false,
+    "test_creation_phase": "post_implementation",
+    "test_types_required": [
+      "unit",
+      "integration",
+      "e2e"
+    ],
+    "security_scanning_required": true,
+    "staging_deployment_required": false,
+    "acceptance_criteria": [
+      "output:'export' removed from next.config.mjs and project builds successfully",
+      "Supabase Auth login/registration works (email + Google OAuth)",
+      "Dashboard KPI cards display with mock data and animated counters",
+      "Menu category drag-and-drop reordering works and persists to Supabase",
+      "Menu item CRUD with allergens and modifiers works",
+      "QR codes generate with correct URLs and download as PNG/SVG",
+      "Bulk QR code ZIP download works",
+      "Order Kanban board renders and updates via Supabase Realtime",
+      "KDS fullscreen mode displays orders correctly",
+      "Theme editor color changes reflect in live preview panel",
+      "6 preset themes can be applied and saved",
+      "Public customer menu at /{slug}/masa/{no} loads with restaurant theme",
+      "Customer can browse menu, add to cart, select modifiers, submit order",
+      "Submitted order appears on dashboard Kanban in real-time",
+      "Waiter call button triggers notification on dashboard",
+      "Language switcher (TR/EN) works on public menu",
+      "Super admin can log in and view all restaurants",
+      "Super admin can suspend/activate restaurants and assign plans",
+      "All pages are mobile responsive (320px-1920px)",
+      "No console errors in normal operation",
+      "Existing MySite pages continue to work correctly",
+      "All Recharts graphs render on analytics page"
+    ],
+    "verification_steps": [
+      {
+        "name": "TypeScript Build Check",
+        "command": "cd /Users/kullanici/Desktop/MySite && npx next build",
+        "expected_outcome": "Build completes successfully with no errors",
+        "type": "build",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "ESLint Check",
+        "command": "cd /Users/kullanici/Desktop/MySite && npm run lint",
+        "expected_outcome": "No lint errors",
+        "type": "lint",
+        "required": true,
+        "blocking": false
+      },
+      {
+        "name": "Route Collision Check",
+        "command": "cd /Users/kullanici/Desktop/MySite && node -e \"const fs=require('fs'); const site=fs.readdirSync('src/app/(site)'); const slug=fs.readdirSync('src/app').filter(f=>f.startsWith('[')); console.log('Static routes:', site.length, 'Dynamic routes:', slug.length)\"",
+        "expected_outcome": "Static routes properly separated from dynamic [restoran-slug] route",
+        "type": "test",
+        "required": true,
+        "blocking": true
+      },
+      {
+        "name": "Secrets Scan",
+        "command": "cd /Users/kullanici/Desktop/MySite && grep -r 'SUPABASE_SERVICE_ROLE_KEY\\|sk_live\\|secret_key' src/ --include='*.ts' --include='*.tsx' -l | grep -v 'server.ts\\|middleware.ts\\|schema.sql\\|types.ts' || echo 'No leaked secrets'",
+        "expected_outcome": "No secrets found in client-side code",
+        "type": "security",
+        "required": true,
+        "blocking": true
+      }
+    ],
+    "reasoning": "High risk due to authentication/authorization (Supabase Auth + RLS), multi-tenant data isolation, realtime order management, dynamic route collision potential, and cross-cutting theme system. Security scan required for auth flows, RLS policies, and API key handling."
+  },
+  "qa_acceptance": {
+    "unit_tests": {
+      "required": true,
+      "commands": [
+        "npx next build"
+      ],
+      "minimum_coverage": null,
+      "notes": "No test framework currently configured. Build check serves as basic validation."
+    },
+    "integration_tests": {
+      "required": true,
+      "commands": [],
+      "services_to_test": [
+        "main"
+      ],
+      "notes": "Manual integration testing required - verify Supabase CRUD operations, auth flow, realtime subscriptions"
+    },
+    "e2e_tests": {
+      "required": true,
+      "commands": [],
+      "flows": [
+        "register -> create restaurant -> add menu -> generate QR -> scan QR -> order -> view on kanban",
+        "login -> dashboard -> all sidebar pages load",
+        "super admin login -> view restaurants -> suspend restaurant"
+      ],
+      "notes": "Manual E2E testing as no Playwright/Cypress configured"
+    },
+    "browser_verification": {
+      "required": true,
+      "pages": [
+        {
+          "url": "http://localhost:3000/MySite/",
+          "checks": [
+            "Existing site renders correctly",
+            "No layout breakage"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/MySite/qr-menu/giris",
+          "checks": [
+            "Login form renders",
+            "Google OAuth button visible"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/MySite/qr-menu/dashboard",
+          "checks": [
+            "KPI cards render",
+            "Sidebar works",
+            "Charts display"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/MySite/qr-menu/dashboard/menu",
+          "checks": [
+            "Categories list",
+            "Drag-drop works",
+            "Item CRUD"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/MySite/qr-menu/dashboard/masalar",
+          "checks": [
+            "Table grid",
+            "QR codes generate"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/MySite/qr-menu/dashboard/siparisler",
+          "checks": [
+            "Kanban columns",
+            "KDS toggle"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/MySite/qr-menu/dashboard/tema",
+          "checks": [
+            "Color pickers",
+            "Live preview"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/MySite/qr-menu/dashboard/analitik",
+          "checks": [
+            "All charts render"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/MySite/qr-menu/dashboard/kampanyalar",
+          "checks": [
+            "Campaign CRUD"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/MySite/qr-menu/dashboard/ayarlar",
+          "checks": [
+            "Tabbed settings"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/MySite/super-admin/giris",
+          "checks": [
+            "Admin login form"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/MySite/super-admin/dashboard",
+          "checks": [
+            "Platform KPIs"
+          ]
+        },
+        {
+          "url": "http://localhost:3000/MySite/demo-restoran/masa/1",
+          "checks": [
+            "Public menu loads",
+            "Dynamic theme"
+          ]
+        }
+      ]
+    },
+    "database_verification": {
+      "required": true,
+      "checks": [
+        "Schema SQL has all 8 tables",
+        "RLS policies defined for all tables",
+        "Realtime enabled on orders/tables/announcements",
+        "Storage buckets defined"
+      ]
+    }
+  },
+  "qa_signoff": null,
+  "status": "human_review",
+  "planStatus": "review",
+  "xstateState": "human_review",
+  "executionPhase": "complete",
+  "updated_at": "2026-03-15T16:04:53.881Z",
+  "lastEvent": {
+    "eventId": "6266615c-9e3e-4f6a-aa92-83b7224f6aa1",
+    "sequence": 0,
+    "type": "PLANNING_COMPLETE",
+    "timestamp": "2026-03-15T12:51:59.989792+00:00"
+  },
+  "last_updated": "2026-03-15T16:04:53.500047+00:00",
+  "reviewReason": "completed"
+}
