@@ -1,5 +1,5 @@
 const nextConfig = {
-  basePath: '/MySite',
+  basePath: process.env.GITHUB_ACTIONS ? '/MySite' : '',
   images: { unoptimized: true },
 };
 

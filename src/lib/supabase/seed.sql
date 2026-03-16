@@ -37,6 +37,20 @@ BEGIN
   -- ---------------------------------------------------------------------------
   -- 2. User Profile (demo restaurant owner)
   -- ---------------------------------------------------------------------------
+  -- Create in auth.users first
+  INSERT INTO auth.users (
+    instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+    recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data,
+    created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token
+  )
+  VALUES (
+    '00000000-0000-0000-0000-000000000000', demo_user_id, 'authenticated', 'authenticated', 'demo@lezzetduragi.com',
+    -- password: demopassword (bcrypt hash)
+    crypt('demopassword', gen_salt('bf')), now(), now(), now(),
+    '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''
+  )
+  ON CONFLICT (id) DO NOTHING;
+
   INSERT INTO user_profiles (id, full_name, phone, role)
   VALUES (demo_user_id, 'Ahmet Yilmaz', '+90 532 123 4567', 'restaurant_owner')
   ON CONFLICT (id) DO NOTHING;
@@ -374,7 +388,20 @@ BEGIN
   -- ---------------------------------------------------------------------------
   -- 10. Super Admin User Profile
   -- ---------------------------------------------------------------------------
-  -- Note: Create this user via Supabase Auth, then insert profile.
+  -- Create in auth.users first
+  INSERT INTO auth.users (
+    instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+    recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data,
+    created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token
+  )
+  VALUES (
+    '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000099', 'authenticated', 'authenticated', 'boraydeger@hotmail.com',
+    -- password: Devspark2026! (bcrypt hash)
+    crypt('Devspark2026!', gen_salt('bf')), now(), now(), now(),
+    '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''
+  )
+  ON CONFLICT (id) DO NOTHING;
+
   INSERT INTO user_profiles (id, full_name, phone, role)
   VALUES ('00000000-0000-0000-0000-000000000099', 'Super Admin', '+90 500 000 0000', 'super_admin')
   ON CONFLICT (id) DO NOTHING;
