@@ -3,6 +3,11 @@ import { createClient } from '@/lib/supabase/server';
 import type { Restaurant } from '@/lib/supabase/types';
 import type { Metadata } from 'next';
 
+// Required for static export (GitHub Pages)
+export function generateStaticParams() {
+  return [{ 'restoran-slug': 'demo' }];
+}
+
 // =============================================================================
 // Public Restaurant Landing Page
 // =============================================================================

@@ -1,5 +1,8 @@
+const isGitHubPages = !!process.env.GITHUB_ACTIONS;
+
 const nextConfig = {
-  basePath: process.env.GITHUB_ACTIONS ? '/MySite' : '',
+  basePath: isGitHubPages ? '/MySite' : '',
+  output: isGitHubPages ? 'export' : undefined,
   images: { unoptimized: true },
 };
 

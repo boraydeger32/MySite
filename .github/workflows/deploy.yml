@@ -18,6 +18,8 @@ jobs:
         with:
           node-version: 20
       - run: npm install
+      - name: Remove server-only routes for static export
+        run: rm -rf src/app/auth
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:
