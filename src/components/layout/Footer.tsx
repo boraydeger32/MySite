@@ -29,6 +29,11 @@ const QUICK_LINKS = [
   { label: 'Iletisim', href: '/iletisim' },
 ];
 
+const PANEL_LINKS = [
+  { label: 'Restoran Paneli', href: '/qr-menu/giris' },
+  { label: 'Super Admin', href: '/super-admin/giris' },
+];
+
 const SOCIAL_LINKS = [
   {
     label: 'GitHub',

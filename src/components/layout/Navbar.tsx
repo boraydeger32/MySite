@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { ChevronDown, Menu, Zap } from 'lucide-react';
+import { ChevronDown, Menu, Zap, QrCode, Shield } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import GlowButton from '@/components/ui/GlowButton';
 import MobileMenu from '@/components/layout/MobileMenu';
@@ -195,8 +195,22 @@ export default function Navbar() {
             })}
           </div>
 
-          {/* CTA + Hamburger */}
-          <div className="flex items-center gap-3">
+          {/* CTA + Panel Links + Hamburger */}
+          <div className="flex items-center gap-2">
+            <Link
+              href="/qr-menu/giris"
+              className="hidden items-center gap-1.5 rounded-lg border border-accent-orange/20 bg-accent-orange/5 px-3 py-2 text-xs font-medium text-accent-orange transition-all hover:border-accent-orange/40 hover:bg-accent-orange/10 lg:flex"
+            >
+              <QrCode className="h-3.5 w-3.5" />
+              Restoran Paneli
+            </Link>
+            <Link
+              href="/super-admin/giris"
+              className="hidden items-center gap-1.5 rounded-lg border border-accent-blue/20 bg-accent-blue/5 px-3 py-2 text-xs font-medium text-accent-blue transition-all hover:border-accent-blue/40 hover:bg-accent-blue/10 lg:flex"
+            >
+              <Shield className="h-3.5 w-3.5" />
+              Admin
+            </Link>
             <div className="hidden lg:block">
               <GlowButton href="/iletisim" variant="solid" size="sm">
                 Teklif Al

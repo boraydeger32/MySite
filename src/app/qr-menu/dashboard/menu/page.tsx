@@ -18,6 +18,7 @@ import {
   X,
   Check,
   RefreshCw,
+  Eye,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -595,6 +596,8 @@ export default function MenuManagementPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
+  const [restaurantSlug, setRestaurantSlug] = useState('lezzet-duragi');
+
   // Modal states
   const [isItemFormOpen, setIsItemFormOpen] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItem | null>(null);
@@ -610,6 +613,17 @@ export default function MenuManagementPage() {
       setIsLoading(true);
       try {
         const supabase = createClient();
+
+        // Fetch restaurant slug for current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: restaurant } = await supabase
+            .from('restaurants')
+            .select('slug')
+            .eq('owner_id', user.id)
+            .single();
+          if (restaurant?.slug) setRestaurantSlug(restaurant.slug);
+        }
 
         // Attempt to fetch categories
         const { data: catData, error: catError } = await supabase
@@ -1329,6 +1343,15 @@ export default function MenuManagementPage() {
         >
           <Sparkles className="mr-1.5 h-4 w-4" />
           AI Aciklama
+        </Button>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="border border-accent-orange/30 bg-accent-orange/5 text-accent-orange hover:bg-accent-orange/10 hover:text-accent-orange"
+          onClick={() => window.open(`/${restaurantSlug}/masa/1`, '_blank')}
+        >
+          <Eye className="mr-1.5 h-4 w-4" />
+          QR Menuyu Gor
         </Button>
 
         {isSaving && (

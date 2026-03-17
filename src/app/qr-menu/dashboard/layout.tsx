@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, useEffect } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
@@ -100,6 +100,25 @@ export default function DashboardLayout({
   const router = useRouter();
   const [notificationCount] = useState(3);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
+  const [restaurantSlug, setRestaurantSlug] = useState('lezzet-duragi');
+
+  useEffect(() => {
+    async function fetchSlug() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data } = await supabase
+            .from('restaurants')
+            .select('slug')
+            .eq('owner_id', user.id)
+            .single();
+          if (data?.slug) setRestaurantSlug(data.slug);
+        }
+      } catch { /* fallback to demo-restoran */ }
+    }
+    fetchSlug();
+  }, []);
 
   const closeMobileSheet = useCallback(() => {
     setIsMobileSheetOpen(false);
@@ -354,6 +373,7 @@ export default function DashboardLayout({
                 </DropdownMenuItem>
                 <DropdownMenuItem
                   className="cursor-pointer text-text-muted focus:bg-white/5 focus:text-text-main"
+                  onClick={() => window.open(`/${restaurantSlug}/masa/1`, '_blank')}
                 >
                   <ExternalLink className="mr-2 h-4 w-4" aria-hidden="true" />
                   Menuyu Goruntule
