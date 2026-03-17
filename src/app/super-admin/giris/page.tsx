@@ -111,7 +111,7 @@ export default function SuperAdminGirisPage() {
         description: 'Admin paneline yonlendiriliyorsunuz...',
       });
       router.push('/super-admin/dashboard');
-    } catch {
+    } catch (err) {
       toast.error('Baglanti hatasi.', {
         description: err instanceof Error ? err.message : 'Sunucuya ulasilamadi. Lutfen tekrar deneyiniz.',
       });
