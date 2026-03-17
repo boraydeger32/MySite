@@ -3,7 +3,7 @@
 import { useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import Link from 'next/link';
-import { X } from 'lucide-react';
+import { X, QrCode, Shield } from 'lucide-react';
 import GlowButton from '@/components/ui/GlowButton';
 
 interface NavLink {
@@ -188,8 +188,28 @@ export default function MobileMenu({
                 );
               })}
 
+              {/* Panel Links */}
+              <motion.div variants={itemVariants} className="mt-6 flex flex-col gap-2">
+                <Link
+                  href="/qr-menu/giris"
+                  onClick={onClose}
+                  className="flex items-center gap-2 rounded-lg border border-accent-orange/20 bg-accent-orange/5 px-4 py-3 text-sm font-medium text-accent-orange transition-all hover:bg-accent-orange/10"
+                >
+                  <QrCode className="h-4 w-4" />
+                  Restoran Paneli
+                </Link>
+                <Link
+                  href="/super-admin/giris"
+                  onClick={onClose}
+                  className="flex items-center gap-2 rounded-lg border border-accent-blue/20 bg-accent-blue/5 px-4 py-3 text-sm font-medium text-accent-blue transition-all hover:bg-accent-blue/10"
+                >
+                  <Shield className="h-4 w-4" />
+                  Super Admin Paneli
+                </Link>
+              </motion.div>
+
               {/* CTA Button */}
-              <motion.div variants={itemVariants} className="mt-6">
+              <motion.div variants={itemVariants} className="mt-4">
                 <GlowButton
                   href="/iletisim"
                   variant="solid"
