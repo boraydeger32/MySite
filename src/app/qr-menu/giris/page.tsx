@@ -97,9 +97,9 @@ export default function QRMenuGirisPage() {
         description: 'Dashboard\'a yonlendiriliyorsunuz...',
       });
       router.push('/qr-menu/dashboard');
-    } catch {
+    } catch (err) {
       toast.error('Baglanti hatasi.', {
-        description: 'Sunucuya ulasilamadi. Lutfen tekrar deneyiniz.',
+        description: err instanceof Error ? err.message : 'Sunucuya ulasilamadi. Lutfen tekrar deneyiniz.',
       });
     } finally {
       setIsSubmitting(false);

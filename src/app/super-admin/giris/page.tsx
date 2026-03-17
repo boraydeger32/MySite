@@ -113,7 +113,7 @@ export default function SuperAdminGirisPage() {
       router.push('/super-admin/dashboard');
     } catch {
       toast.error('Baglanti hatasi.', {
-        description: 'Sunucuya ulasilamadi. Lutfen tekrar deneyiniz.',
+        description: err instanceof Error ? err.message : 'Sunucuya ulasilamadi. Lutfen tekrar deneyiniz.',
       });
     } finally {
       setIsSubmitting(false);
