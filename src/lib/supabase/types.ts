@@ -27,6 +27,16 @@ export type AnnouncementSeverity = 'info' | 'warning' | 'critical';
 
 export type AnnouncementTarget = 'all' | 'plan_based' | 'individual';
 
+export type StaffRole = 'manager' | 'chef' | 'waiter' | 'cashier';
+
+export type ReservationStatus = 'pending' | 'confirmed' | 'seated' | 'completed' | 'cancelled' | 'no_show';
+
+export type PaymentMethod = 'cash' | 'credit_card' | 'debit_card' | 'online' | 'other';
+
+export type PaymentStatus = 'pending' | 'completed' | 'failed' | 'refunded';
+
+export type InventoryUnit = 'kg' | 'lt' | 'adet' | 'porsiyon' | 'paket';
+
 // ---------------------------------------------------------------------------
 // JSONB Field Types
 // ---------------------------------------------------------------------------
@@ -234,6 +244,66 @@ export interface Announcement {
   created_at: string;
 }
 
+export interface Staff {
+  id: string;
+  restaurant_id: string;
+  user_id: string | null;
+  name: string;
+  email: string | null;
+  phone: string | null;
+  role: StaffRole;
+  pin: string | null;
+  is_active: boolean;
+  permissions: string[];
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Reservation {
+  id: string;
+  restaurant_id: string;
+  table_id: string | null;
+  customer_name: string;
+  customer_phone: string | null;
+  customer_email: string | null;
+  party_size: number;
+  reservation_date: string;
+  reservation_time: string;
+  duration_minutes: number;
+  status: ReservationStatus;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Payment {
+  id: string;
+  restaurant_id: string;
+  order_id: string;
+  amount: number;
+  tip_amount: number;
+  payment_method: PaymentMethod;
+  status: PaymentStatus;
+  provider: string | null;
+  provider_transaction_id: string | null;
+  metadata: Record<string, unknown>;
+  created_at: string;
+}
+
+export interface InventoryItem {
+  id: string;
+  restaurant_id: string;
+  name: string;
+  unit: InventoryUnit;
+  current_stock: number;
+  min_stock: number;
+  cost_per_unit: number | null;
+  category: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 // ---------------------------------------------------------------------------
 // Insert Types (omit auto-generated fields)
 // ---------------------------------------------------------------------------
@@ -268,6 +338,22 @@ export type AnnouncementInsert = Omit<Announcement, 'id' | 'created_at'> & {
   id?: string;
 };
 
+export type StaffInsert = Omit<Staff, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+};
+
+export type ReservationInsert = Omit<Reservation, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+};
+
+export type PaymentInsert = Omit<Payment, 'id' | 'created_at'> & {
+  id?: string;
+};
+
+export type InventoryItemInsert = Omit<InventoryItem, 'id' | 'created_at' | 'updated_at'> & {
+  id?: string;
+};
+
 // ---------------------------------------------------------------------------
 // Update Types (all fields optional except id)
 // ---------------------------------------------------------------------------
@@ -287,6 +373,42 @@ export type OrderUpdate = Partial<Omit<Order, 'id' | 'restaurant_id' | 'created_
 export type CampaignUpdate = Partial<Omit<Campaign, 'id' | 'restaurant_id' | 'created_at'>>;
 
 export type AnnouncementUpdate = Partial<Omit<Announcement, 'id' | 'created_at'>>;
+
+// ---------------------------------------------------------------------------
+// Contact & Newsletter Types
+// ---------------------------------------------------------------------------
+
+export type ContactSubmissionStatus = 'new' | 'read' | 'replied' | 'archived';
+
+export interface ContactSubmission {
+  id: string;
+  name: string;
+  email: string;
+  phone: string | null;
+  service: string;
+  message: string;
+  ip_address: string | null;
+  status: ContactSubmissionStatus;
+  created_at: string;
+}
+
+export type ContactSubmissionInsert = Omit<ContactSubmission, 'id' | 'created_at' | 'status'> & {
+  id?: string;
+  status?: ContactSubmissionStatus;
+};
+
+export interface NewsletterSubscriber {
+  id: string;
+  email: string;
+  is_active: boolean;
+  source: string | null;
+  ip_address: string | null;
+  created_at: string;
+}
+
+export type NewsletterSubscriberInsert = Omit<NewsletterSubscriber, 'id' | 'created_at'> & {
+  id?: string;
+};
 
 // ---------------------------------------------------------------------------
 // Joined / Extended Types (for queries with relations)
@@ -355,6 +477,16 @@ export interface Database {
         Row: Announcement;
         Insert: AnnouncementInsert;
         Update: AnnouncementUpdate;
+      };
+      contact_submissions: {
+        Row: ContactSubmission;
+        Insert: ContactSubmissionInsert;
+        Update: Partial<Omit<ContactSubmission, 'id' | 'created_at'>>;
+      };
+      newsletter_subscribers: {
+        Row: NewsletterSubscriber;
+        Insert: NewsletterSubscriberInsert;
+        Update: Partial<Omit<NewsletterSubscriber, 'id' | 'created_at'>>;
       };
     };
     Views: Record<string, never>;

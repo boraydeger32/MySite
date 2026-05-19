@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, Check, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/components/qr-menu/public/LanguageSwitcher';
 
 // =============================================================================
 // Public Menu - Waiter Call Button
@@ -53,6 +54,7 @@ export default function WaiterCallButton({
   borderRadius = '12px',
   className,
 }: WaiterCallButtonProps) {
+  const { t } = useTranslation();
   const [callState, setCallState] = useState<CallState>('idle');
 
   // ---------------------------------------------------------------------------
@@ -177,10 +179,10 @@ export default function WaiterCallButton({
         }}
       >
         {callState === 'called'
-          ? 'Garson Cagirildi'
+          ? t('waiter.called')
           : callState === 'loading'
-            ? 'Cagriliyor...'
-            : 'Garson Cagir'}
+            ? t('waiter.calling')
+            : t('waiter.call')}
       </span>
     </motion.button>
   );

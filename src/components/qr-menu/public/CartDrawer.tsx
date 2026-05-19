@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo } from 'react';
+import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingCart,
@@ -14,6 +14,7 @@ import {
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useCartStore, type CartItem } from '@/store/useCartStore';
+import { useTranslation } from '@/components/qr-menu/public/LanguageSwitcher';
 
 // =============================================================================
 // Public Menu - Cart Drawer
@@ -260,6 +261,7 @@ export default function CartDrawer({
   borderRadius = '12px',
   className,
 }: CartDrawerProps) {
+  const { t } = useTranslation();
   const [isOpen, setIsOpen] = useState(false);
 
   const items = useCartStore((s) => s.items);
@@ -378,7 +380,7 @@ export default function CartDrawer({
                     className="text-lg font-bold"
                     style={{ color: textColor }}
                   >
-                    Sepetim
+                    {t('cart.title')}
                   </h2>
                   <span
                     className="flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-[10px] font-bold text-white"
@@ -396,7 +398,7 @@ export default function CartDrawer({
                       className="rounded-lg px-2 py-1 text-xs font-medium text-red-400 transition-colors hover:bg-red-500/10"
                       aria-label="Sepeti temizle"
                     >
-                      Temizle
+                      {t('cart.clear')}
                     </button>
                   )}
 
@@ -428,7 +430,7 @@ export default function CartDrawer({
                         className="mt-3 text-sm"
                         style={{ color: `${textColor}50` }}
                       >
-                        Sepetiniz bos
+                        {t('cart.empty')}
                       </p>
                     </div>
                   ) : (
@@ -460,7 +462,7 @@ export default function CartDrawer({
                       className="text-sm font-medium"
                       style={{ color: `${textColor}80` }}
                     >
-                      Toplam
+                      {t('cart.total')}
                     </span>
                     <span
                       className="text-xl font-bold"
@@ -483,7 +485,7 @@ export default function CartDrawer({
                     whileTap={{ scale: 0.97 }}
                   >
                     <ShoppingBag className="h-4 w-4" />
-                    Siparis Ver
+                    {t('cart.submit')}
                   </motion.button>
                 </div>
               )}

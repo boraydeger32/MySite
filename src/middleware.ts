@@ -3,6 +3,8 @@ import { NextResponse, type NextRequest } from 'next/server';
 
 const PROTECTED_ROUTES = ['/qr-menu/dashboard', '/super-admin/dashboard'];
 
+const SUPER_ADMIN_ROUTES = ['/super-admin/dashboard'];
+
 const LOGIN_REDIRECTS: Record<string, string> = {
   '/qr-menu/dashboard': '/qr-menu/giris',
   '/super-admin/dashboard': '/super-admin/giris',
@@ -31,7 +33,7 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) =>
+          cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value)
           );
           supabaseResponse = NextResponse.next({
@@ -66,6 +68,26 @@ export async function middleware(request: NextRequest) {
     url.pathname = loginPath;
     url.searchParams.set('redirectTo', pathname);
     return NextResponse.redirect(url);
+  }
+
+  // Super admin role verification - check user_profiles.role
+  const isSuperAdminRoute = SUPER_ADMIN_ROUTES.some((route) =>
+    pathname.startsWith(route)
+  );
+
+  if (isSuperAdminRoute && user) {
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+
+    if (!profile || profile.role !== 'super_admin') {
+      const url = request.nextUrl.clone();
+      url.pathname = '/super-admin/giris';
+      url.searchParams.set('error', 'unauthorized');
+      return NextResponse.redirect(url);
+    }
   }
 
   // IMPORTANT: You *must* return the supabaseResponse object as is.

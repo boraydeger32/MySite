@@ -59,7 +59,7 @@ type FilterStatus = 'all' | 'active' | 'inactive';
 // Constants
 // =============================================================================
 
-const MOCK_RESTAURANT_ID = 'demo-restaurant-001';
+// Restaurant ID will be fetched from Supabase on mount
 
 const CAMPAIGN_TYPE_CONFIG: Record<
   CampaignType,
@@ -124,7 +124,7 @@ const BANNER_POSITIONS: { value: BannerPosition; label: string }[] = [
 const MOCK_CAMPAIGNS: Campaign[] = [
   {
     id: 'camp-1',
-    restaurant_id: MOCK_RESTAURANT_ID,
+    restaurant_id: '',
     type: 'coupon',
     name: 'Hosgeldin Indirimi',
     description: 'Ilk siparise ozel %15 indirim kuponu.',
@@ -140,7 +140,7 @@ const MOCK_CAMPAIGNS: Campaign[] = [
   },
   {
     id: 'camp-2',
-    restaurant_id: MOCK_RESTAURANT_ID,
+    restaurant_id: '',
     type: 'combo',
     name: 'Aile Combo',
     description: '2 Ana Yemek + 2 Icecek + 1 Tatli ozel fiyatla.',
@@ -159,7 +159,7 @@ const MOCK_CAMPAIGNS: Campaign[] = [
   },
   {
     id: 'camp-3',
-    restaurant_id: MOCK_RESTAURANT_ID,
+    restaurant_id: '',
     type: 'happy_hour',
     name: 'Hafta Ici Mutlu Saat',
     description: 'Hafta ici 14:00-17:00 arasi tum iceceklerde %25 indirim.',
@@ -180,7 +180,7 @@ const MOCK_CAMPAIGNS: Campaign[] = [
   },
   {
     id: 'camp-4',
-    restaurant_id: MOCK_RESTAURANT_ID,
+    restaurant_id: '',
     type: 'banner',
     name: 'Yaz Menusu Duyurusu',
     description: 'Yeni yaz menumuzu kesfetmek icin tiklayin!',
@@ -200,7 +200,7 @@ const MOCK_CAMPAIGNS: Campaign[] = [
   },
   {
     id: 'camp-5',
-    restaurant_id: MOCK_RESTAURANT_ID,
+    restaurant_id: '',
     type: 'coupon',
     name: 'Dogum Gunu Indirimi',
     description: 'Dogum gununuze ozel 75 TL indirim.',
@@ -748,7 +748,7 @@ function CampaignFormModal({ open, onOpenChange, onSubmit, editingCampaign }: Ca
       }
 
       const campaignData: CampaignInsert = {
-        restaurant_id: MOCK_RESTAURANT_ID,
+        restaurant_id: '',
         type: campaignType,
         name: name.trim(),
         description: description.trim() || null,
@@ -1272,17 +1272,18 @@ function DeleteConfirmDialog({ open, onOpenChange, onConfirm, campaignName }: De
 // =============================================================================
 
 export default function KampanyalarPage() {
-  const [campaigns, setCampaigns] = useState<Campaign[]>(MOCK_CAMPAIGNS);
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<FilterType>('all');
   const [filterStatus, setFilterStatus] = useState<FilterStatus>('all');
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState<Campaign | null>(null);
   const [deletingCampaign, setDeletingCampaign] = useState<Campaign | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
 
   // ---------------------------------------------------------------------------
-  // Supabase Fetch (with fallback to mock data)
+  // Supabase Fetch
   // ---------------------------------------------------------------------------
 
   useEffect(() => {
@@ -1290,18 +1291,30 @@ export default function KampanyalarPage() {
       setIsLoading(true);
       try {
         const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: restaurant } = await supabase
+          .from('restaurants')
+          .select('id')
+          .eq('owner_id', user.id)
+          .single();
+
+        if (!restaurant) return;
+        setRestaurantId(restaurant.id);
+
         const { data, error } = await supabase
           .from('campaigns')
           .select('*')
-          .eq('restaurant_id', MOCK_RESTAURANT_ID)
+          .eq('restaurant_id', restaurant.id)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
-        if (data && data.length > 0) {
+        if (data) {
           setCampaigns(data as Campaign[]);
         }
       } catch {
-        // Supabase not configured or no data — keep mock data
+        toast.error('Kampanyalar yuklenirken hata olustu.');
       } finally {
         setIsLoading(false);
       }
@@ -1350,6 +1363,7 @@ export default function KampanyalarPage() {
     async (data: CampaignInsert) => {
       const newCampaign: Campaign = {
         ...data,
+        restaurant_id: restaurantId ?? data.restaurant_id,
         id: `camp-${Date.now()}`,
         created_at: new Date().toISOString(),
         discount_type: data.discount_type ?? null,
@@ -1381,7 +1395,7 @@ export default function KampanyalarPage() {
           return;
         }
       } catch {
-        // Supabase not available — use local state
+        console.error('[Kampanyalar] DB islem basarisiz.');
       }
 
       setCampaigns((prev) => [newCampaign, ...prev]);
@@ -1428,7 +1442,7 @@ export default function KampanyalarPage() {
 
         if (error) throw error;
       } catch {
-        // Supabase not available — use local state
+        console.error('[Kampanyalar] DB islem basarisiz.');
       }
 
       setCampaigns((prev) => prev.map((c) => (c.id === editingCampaign.id ? updated : c)));
@@ -1453,7 +1467,7 @@ export default function KampanyalarPage() {
 
       if (error) throw error;
     } catch {
-      // Supabase not available — use local state
+      console.error('[Kampanyalar] DB islem basarisiz.');
     }
 
     setCampaigns((prev) => prev.filter((c) => c.id !== deletingCampaign.id));
@@ -1476,7 +1490,7 @@ export default function KampanyalarPage() {
 
       if (error) throw error;
     } catch {
-      // Supabase not available — use local state
+      console.error('[Kampanyalar] DB islem basarisiz.');
     }
 
     setCampaigns((prev) =>

@@ -62,7 +62,8 @@ interface DayConfig {
 // Constants
 // =============================================================================
 
-const MOCK_RESTAURANT_ID = 'demo-restaurant-001';
+import { DEMO_RESTAURANT_ID, DEMO_RESTAURANT_SLUG } from '@/lib/constants';
+const MOCK_RESTAURANT_ID = DEMO_RESTAURANT_ID;
 
 const TABS_CONFIG: { value: SettingsTab; label: string; icon: typeof Store }[] = [
   { value: 'genel', label: 'Genel', icon: Store },
@@ -341,8 +342,8 @@ export default function SettingsPage() {
     } else {
       // Mock data for demo
       setRestaurantName('Demo Restoran');
-      setSlug('demo-restoran');
-      setOriginalSlug('demo-restoran');
+      setSlug(DEMO_RESTAURANT_SLUG);
+      setOriginalSlug(DEMO_RESTAURANT_SLUG);
       setDescription('Lezzetli yemeklerin adresi');
       setAddress('Ornek Mahallesi, Lezzet Sokak No:12, Kadikoy/Istanbul');
       setPhone('+90 532 123 45 67');
@@ -437,7 +438,12 @@ export default function SettingsPage() {
         delete settingsData.workingHours![dayKey as keyof WorkingHours];
       });
 
-      const restaurantId = restaurant?.id || MOCK_RESTAURANT_ID;
+      if (!restaurant?.id) {
+        toast.error('Restoran bilgisi bulunamadi.');
+        setIsSaving(false);
+        return;
+      }
+      const restaurantId = restaurant.id;
 
       const { error } = await supabase
         .from('restaurants')

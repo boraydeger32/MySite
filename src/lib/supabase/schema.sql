@@ -93,10 +93,10 @@ CREATE TABLE menu_items (
   restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
   name TEXT NOT NULL,
   description TEXT,
-  price DECIMAL(10,2) NOT NULL,
+  price DECIMAL(10,2) NOT NULL CHECK (price >= 0),
   image_url TEXT,
-  calories INT,
-  prep_time INT,
+  calories INT CHECK (calories IS NULL OR calories >= 0),
+  prep_time INT CHECK (prep_time IS NULL OR prep_time > 0),
   allergens TEXT[] NOT NULL DEFAULT '{}',
   badges TEXT[] NOT NULL DEFAULT '{}',
   modifiers JSONB NOT NULL DEFAULT '[]',
@@ -118,7 +118,7 @@ CREATE TABLE tables (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
   table_number TEXT NOT NULL,
-  capacity INT NOT NULL DEFAULT 4,
+  capacity INT NOT NULL DEFAULT 4 CHECK (capacity > 0),
   position JSONB NOT NULL DEFAULT '{"x": 0, "y": 0}',
   status TEXT NOT NULL DEFAULT 'empty' CHECK (status IN ('empty', 'occupied', 'reserved', 'cleaning')),
   qr_code_url TEXT,
@@ -138,7 +138,7 @@ CREATE TABLE orders (
   restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
   table_id UUID REFERENCES tables(id) ON DELETE SET NULL,
   items JSONB NOT NULL,
-  total_amount DECIMAL(10,2) NOT NULL,
+  total_amount DECIMAL(10,2) NOT NULL CHECK (total_amount >= 0),
   status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'preparing', 'ready', 'delivered', 'cancelled')),
   notes TEXT,
   waiter_called BOOLEAN NOT NULL DEFAULT false,
@@ -167,7 +167,7 @@ CREATE TABLE campaigns (
   name TEXT NOT NULL,
   description TEXT,
   discount_type TEXT CHECK (discount_type IN ('percentage', 'fixed')),
-  discount_value DECIMAL(10,2),
+  discount_value DECIMAL(10,2) CHECK (discount_value IS NULL OR discount_value >= 0),
   start_date TIMESTAMPTZ,
   end_date TIMESTAMPTZ,
   usage_limit INT,
@@ -201,18 +201,185 @@ CREATE INDEX idx_announcements_created_at ON announcements(created_at DESC);
 COMMENT ON TABLE announcements IS 'Platform-wide announcements from super admin with targeting';
 
 -- ===========================================================================
+-- 9. staff (restaurant employees with roles)
+-- ===========================================================================
+CREATE TABLE staff (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  name TEXT NOT NULL,
+  email TEXT,
+  phone TEXT,
+  role TEXT NOT NULL DEFAULT 'waiter' CHECK (role IN ('manager', 'chef', 'waiter', 'cashier')),
+  pin TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  permissions JSONB NOT NULL DEFAULT '[]',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_staff_restaurant_id ON staff(restaurant_id);
+CREATE INDEX idx_staff_user_id ON staff(user_id);
+
+CREATE TRIGGER trg_staff_updated_at
+  BEFORE UPDATE ON staff
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+COMMENT ON TABLE staff IS 'Restaurant staff members with role-based access control';
+
+-- ===========================================================================
+-- 10. reservations
+-- ===========================================================================
+CREATE TABLE reservations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+  table_id UUID REFERENCES tables(id) ON DELETE SET NULL,
+  customer_name TEXT NOT NULL,
+  customer_phone TEXT,
+  customer_email TEXT,
+  party_size INT NOT NULL CHECK (party_size > 0),
+  reservation_date DATE NOT NULL,
+  reservation_time TIME NOT NULL,
+  duration_minutes INT NOT NULL DEFAULT 90 CHECK (duration_minutes > 0),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'seated', 'completed', 'cancelled', 'no_show')),
+  notes TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_reservations_restaurant_id ON reservations(restaurant_id);
+CREATE INDEX idx_reservations_date ON reservations(restaurant_id, reservation_date);
+CREATE INDEX idx_reservations_status ON reservations(restaurant_id, status);
+
+CREATE TRIGGER trg_reservations_updated_at
+  BEFORE UPDATE ON reservations
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+COMMENT ON TABLE reservations IS 'Table reservations with status tracking';
+
+-- ===========================================================================
+-- 11. payments
+-- ===========================================================================
+CREATE TABLE payments (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+  order_id UUID NOT NULL REFERENCES orders(id) ON DELETE CASCADE,
+  amount DECIMAL(10,2) NOT NULL CHECK (amount > 0),
+  tip_amount DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (tip_amount >= 0),
+  payment_method TEXT NOT NULL CHECK (payment_method IN ('cash', 'credit_card', 'debit_card', 'online', 'other')),
+  status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'completed', 'failed', 'refunded')),
+  provider TEXT,
+  provider_transaction_id TEXT,
+  metadata JSONB NOT NULL DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_payments_restaurant_id ON payments(restaurant_id);
+CREATE INDEX idx_payments_order_id ON payments(order_id);
+CREATE INDEX idx_payments_created_at ON payments(restaurant_id, created_at DESC);
+
+COMMENT ON TABLE payments IS 'Payment records linked to orders with provider tracking';
+
+-- ===========================================================================
+-- 12. inventory (stock tracking)
+-- ===========================================================================
+CREATE TABLE inventory (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  restaurant_id UUID NOT NULL REFERENCES restaurants(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  unit TEXT NOT NULL DEFAULT 'adet' CHECK (unit IN ('kg', 'lt', 'adet', 'porsiyon', 'paket')),
+  current_stock DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (current_stock >= 0),
+  min_stock DECIMAL(10,2) NOT NULL DEFAULT 0 CHECK (min_stock >= 0),
+  cost_per_unit DECIMAL(10,2) CHECK (cost_per_unit IS NULL OR cost_per_unit >= 0),
+  category TEXT,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_inventory_restaurant_id ON inventory(restaurant_id);
+CREATE INDEX idx_inventory_low_stock ON inventory(restaurant_id, current_stock, min_stock);
+
+CREATE TRIGGER trg_inventory_updated_at
+  BEFORE UPDATE ON inventory
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at();
+
+COMMENT ON TABLE inventory IS 'Ingredient/stock inventory with low-stock alerts';
+
+-- ===========================================================================
+-- 13. contact_submissions
+-- ===========================================================================
+CREATE TABLE contact_submissions (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  email TEXT NOT NULL,
+  phone TEXT,
+  service TEXT NOT NULL,
+  message TEXT NOT NULL,
+  ip_address TEXT,
+  status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'read', 'replied', 'archived')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_contact_submissions_status ON contact_submissions(status);
+
+COMMENT ON TABLE contact_submissions IS 'Contact form submissions from the public website';
+
+-- ===========================================================================
+-- 14. newsletter_subscribers
+-- ===========================================================================
+CREATE TABLE newsletter_subscribers (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email TEXT UNIQUE NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  source TEXT DEFAULT 'website',
+  ip_address TEXT,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE INDEX idx_newsletter_email ON newsletter_subscribers(email);
+
+COMMENT ON TABLE newsletter_subscribers IS 'Newsletter email subscribers';
+
+-- ===========================================================================
 -- Row Level Security (RLS)
 -- ===========================================================================
 
 -- Enable RLS on all tables
 ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE restaurants ENABLE ROW LEVEL SECURITY;
+ALTER TABLE staff ENABLE ROW LEVEL SECURITY;
+ALTER TABLE reservations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE payments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE inventory ENABLE ROW LEVEL SECURITY;
 ALTER TABLE menu_categories ENABLE ROW LEVEL SECURITY;
 ALTER TABLE menu_items ENABLE ROW LEVEL SECURITY;
 ALTER TABLE tables ENABLE ROW LEVEL SECURITY;
 ALTER TABLE orders ENABLE ROW LEVEL SECURITY;
 ALTER TABLE campaigns ENABLE ROW LEVEL SECURITY;
 ALTER TABLE announcements ENABLE ROW LEVEL SECURITY;
+ALTER TABLE contact_submissions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE newsletter_subscribers ENABLE ROW LEVEL SECURITY;
+
+-- Contact/newsletter: service role can insert (API routes), super admins can read
+CREATE POLICY "service_insert_contact" ON contact_submissions
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "admin_read_contact" ON contact_submissions
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'super_admin')
+  );
+
+CREATE POLICY "service_insert_newsletter" ON newsletter_subscribers
+  FOR INSERT WITH CHECK (true);
+
+CREATE POLICY "service_update_newsletter" ON newsletter_subscribers
+  FOR UPDATE USING (true);
+
+CREATE POLICY "admin_read_newsletter" ON newsletter_subscribers
+  FOR SELECT USING (
+    EXISTS (SELECT 1 FROM user_profiles WHERE id = auth.uid() AND role = 'super_admin')
+  );
 
 -- ---------------------------------------------------------------------------
 -- user_profiles policies
@@ -351,9 +518,11 @@ CREATE POLICY "restaurant_owner_orders_delete" ON orders
     restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid())
   );
 
--- Public order creation (customers can place orders without auth)
+-- Public order creation (customers can place orders only for active restaurants)
 CREATE POLICY "public_order_insert" ON orders
-  FOR INSERT WITH CHECK (true);
+  FOR INSERT WITH CHECK (
+    restaurant_id IN (SELECT id FROM restaurants WHERE status = 'active')
+  );
 
 -- ---------------------------------------------------------------------------
 -- campaigns policies
@@ -392,6 +561,55 @@ CREATE POLICY "authenticated_announcements_read" ON announcements
 
 -- Super admin operations use service_role key which bypasses RLS
 
+-- ---------------------------------------------------------------------------
+-- staff policies
+-- ---------------------------------------------------------------------------
+CREATE POLICY "restaurant_owner_staff_select" ON staff
+  FOR SELECT USING (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+CREATE POLICY "restaurant_owner_staff_insert" ON staff
+  FOR INSERT WITH CHECK (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+CREATE POLICY "restaurant_owner_staff_update" ON staff
+  FOR UPDATE USING (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+CREATE POLICY "restaurant_owner_staff_delete" ON staff
+  FOR DELETE USING (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+
+-- ---------------------------------------------------------------------------
+-- reservations policies
+-- ---------------------------------------------------------------------------
+CREATE POLICY "restaurant_owner_reservations_select" ON reservations
+  FOR SELECT USING (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+CREATE POLICY "restaurant_owner_reservations_insert" ON reservations
+  FOR INSERT WITH CHECK (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+CREATE POLICY "restaurant_owner_reservations_update" ON reservations
+  FOR UPDATE USING (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+CREATE POLICY "restaurant_owner_reservations_delete" ON reservations
+  FOR DELETE USING (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+-- Public reservation creation (customers can make reservations)
+CREATE POLICY "public_reservation_insert" ON reservations
+  FOR INSERT WITH CHECK (restaurant_id IN (SELECT id FROM restaurants WHERE status = 'active'));
+
+-- ---------------------------------------------------------------------------
+-- payments policies
+-- ---------------------------------------------------------------------------
+CREATE POLICY "restaurant_owner_payments_select" ON payments
+  FOR SELECT USING (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+CREATE POLICY "restaurant_owner_payments_insert" ON payments
+  FOR INSERT WITH CHECK (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+CREATE POLICY "restaurant_owner_payments_update" ON payments
+  FOR UPDATE USING (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+
+-- ---------------------------------------------------------------------------
+-- inventory policies
+-- ---------------------------------------------------------------------------
+CREATE POLICY "restaurant_owner_inventory_select" ON inventory
+  FOR SELECT USING (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+CREATE POLICY "restaurant_owner_inventory_insert" ON inventory
+  FOR INSERT WITH CHECK (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+CREATE POLICY "restaurant_owner_inventory_update" ON inventory
+  FOR UPDATE USING (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+CREATE POLICY "restaurant_owner_inventory_delete" ON inventory
+  FOR DELETE USING (restaurant_id IN (SELECT id FROM restaurants WHERE owner_id = auth.uid()));
+
 -- ===========================================================================
 -- Realtime Configuration
 -- ===========================================================================
@@ -419,23 +637,30 @@ VALUES
   ('covers', 'covers', true, 5242880, ARRAY['image/png', 'image/jpeg', 'image/webp'])
 ON CONFLICT (id) DO NOTHING;
 
--- Storage policies: allow authenticated users to upload to their restaurant folders
-CREATE POLICY "authenticated_upload_logos" ON storage.objects
+-- Storage policies: users can only upload to folders matching their user ID
+-- Upload path convention: {bucket}/{user_id}/{filename}
+CREATE POLICY "owner_upload_logos" ON storage.objects
   FOR INSERT WITH CHECK (
-    bucket_id = 'restaurant-logos' AND auth.role() = 'authenticated'
+    bucket_id = 'restaurant-logos'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
-CREATE POLICY "authenticated_upload_menu_images" ON storage.objects
+CREATE POLICY "owner_upload_menu_images" ON storage.objects
   FOR INSERT WITH CHECK (
-    bucket_id = 'menu-images' AND auth.role() = 'authenticated'
+    bucket_id = 'menu-images'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
-CREATE POLICY "authenticated_upload_covers" ON storage.objects
+CREATE POLICY "owner_upload_covers" ON storage.objects
   FOR INSERT WITH CHECK (
-    bucket_id = 'covers' AND auth.role() = 'authenticated'
+    bucket_id = 'covers'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
--- Public read access for all storage buckets
+-- Public read access for all storage buckets (menu images must be public)
 CREATE POLICY "public_read_logos" ON storage.objects
   FOR SELECT USING (bucket_id = 'restaurant-logos');
 
@@ -445,33 +670,45 @@ CREATE POLICY "public_read_menu_images" ON storage.objects
 CREATE POLICY "public_read_covers" ON storage.objects
   FOR SELECT USING (bucket_id = 'covers');
 
--- Authenticated users can update/delete their own uploads
-CREATE POLICY "authenticated_update_logos" ON storage.objects
+-- Users can only update/delete files in their own folder
+CREATE POLICY "owner_update_logos" ON storage.objects
   FOR UPDATE USING (
-    bucket_id = 'restaurant-logos' AND auth.role() = 'authenticated'
+    bucket_id = 'restaurant-logos'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
-CREATE POLICY "authenticated_delete_logos" ON storage.objects
+CREATE POLICY "owner_delete_logos" ON storage.objects
   FOR DELETE USING (
-    bucket_id = 'restaurant-logos' AND auth.role() = 'authenticated'
+    bucket_id = 'restaurant-logos'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
-CREATE POLICY "authenticated_update_menu_images" ON storage.objects
+CREATE POLICY "owner_update_menu_images" ON storage.objects
   FOR UPDATE USING (
-    bucket_id = 'menu-images' AND auth.role() = 'authenticated'
+    bucket_id = 'menu-images'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
-CREATE POLICY "authenticated_delete_menu_images" ON storage.objects
+CREATE POLICY "owner_delete_menu_images" ON storage.objects
   FOR DELETE USING (
-    bucket_id = 'menu-images' AND auth.role() = 'authenticated'
+    bucket_id = 'menu-images'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
-CREATE POLICY "authenticated_update_covers" ON storage.objects
+CREATE POLICY "owner_update_covers" ON storage.objects
   FOR UPDATE USING (
-    bucket_id = 'covers' AND auth.role() = 'authenticated'
+    bucket_id = 'covers'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
   );
 
-CREATE POLICY "authenticated_delete_covers" ON storage.objects
+CREATE POLICY "owner_delete_covers" ON storage.objects
   FOR DELETE USING (
-    bucket_id = 'covers' AND auth.role() = 'authenticated'
+    bucket_id = 'covers'
+    AND auth.role() = 'authenticated'
+    AND (storage.foldername(name))[1] = auth.uid()::text
   );

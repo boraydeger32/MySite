@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useMemo, useRef } from 'react';
+import { useState, useCallback, useMemo, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Plus,
@@ -19,7 +19,9 @@ import {
 import { QRCodeCanvas, QRCodeSVG } from 'qrcode.react';
 import JSZip from 'jszip';
 import { saveAs } from 'file-saver';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 import TableMap from '@/components/qr-menu/TableMap';
 import QRCodeGenerator from '@/components/qr-menu/QRCodeGenerator';
 import {
@@ -50,8 +52,7 @@ interface TableData {
 // Constants
 // ---------------------------------------------------------------------------
 
-const BASE_PATH = '/MySite';
-const RESTAURANT_SLUG = 'demo-restoran';
+// Restaurant slug fetched from Supabase on mount
 
 const STATUS_CONFIG: Record<
   TableStatus,
@@ -93,30 +94,17 @@ const STATUS_ORDER: TableStatus[] = ['empty', 'occupied', 'reserved', 'cleaning'
 // Mock Data
 // ---------------------------------------------------------------------------
 
-const INITIAL_TABLES: TableData[] = [
-  { id: 't1', tableNumber: '1', capacity: 4, status: 'occupied', position: { x: 0, y: 0 } },
-  { id: 't2', tableNumber: '2', capacity: 2, status: 'empty', position: { x: 1, y: 0 } },
-  { id: 't3', tableNumber: '3', capacity: 6, status: 'reserved', position: { x: 2, y: 0 } },
-  { id: 't4', tableNumber: '4', capacity: 4, status: 'empty', position: { x: 4, y: 0 } },
-  { id: 't5', tableNumber: '5', capacity: 8, status: 'occupied', position: { x: 0, y: 1 } },
-  { id: 't6', tableNumber: '6', capacity: 2, status: 'cleaning', position: { x: 2, y: 1 } },
-  { id: 't7', tableNumber: '7', capacity: 4, status: 'empty', position: { x: 3, y: 1 } },
-  { id: 't8', tableNumber: '8', capacity: 4, status: 'occupied', position: { x: 5, y: 1 } },
-  { id: 't9', tableNumber: '9', capacity: 6, status: 'empty', position: { x: 1, y: 2 } },
-  { id: 't10', tableNumber: '10', capacity: 2, status: 'reserved', position: { x: 3, y: 2 } },
-  { id: 't11', tableNumber: '11', capacity: 4, status: 'empty', position: { x: 5, y: 2 } },
-  { id: 't12', tableNumber: '12', capacity: 8, status: 'occupied', position: { x: 0, y: 3 } },
-];
+const INITIAL_TABLES: TableData[] = [];
 
 // ---------------------------------------------------------------------------
 // Helper: Build menu URL
 // ---------------------------------------------------------------------------
 
-function buildMenuUrl(tableNumber: string): string {
+function buildMenuUrl(slug: string, tableNumber: string): string {
   if (typeof window !== 'undefined') {
-    return `${window.location.origin}${BASE_PATH}/${RESTAURANT_SLUG}/masa/${tableNumber}`;
+    return `${window.location.origin}/${slug}/masa/${tableNumber}`;
   }
-  return `${BASE_PATH}/${RESTAURANT_SLUG}/masa/${tableNumber}`;
+  return `/${slug}/masa/${tableNumber}`;
 }
 
 // ---------------------------------------------------------------------------
@@ -269,9 +257,10 @@ interface QRDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   table: TableData | null;
+  restaurantSlug: string;
 }
 
-function QRDetailModal({ open, onOpenChange, table }: QRDetailModalProps) {
+function QRDetailModal({ open, onOpenChange, table, restaurantSlug }: QRDetailModalProps) {
   if (!table) return null;
 
   return (
@@ -287,7 +276,7 @@ function QRDetailModal({ open, onOpenChange, table }: QRDetailModalProps) {
         </DialogHeader>
 
         <QRCodeGenerator
-          restaurantSlug={RESTAURANT_SLUG}
+          restaurantSlug={restaurantSlug}
           tableNumber={table.tableNumber}
           size={200}
           className="border-0 bg-transparent p-0"
@@ -731,9 +720,10 @@ function TableListRow({ table, onEdit, onDelete, onQR, onStatusChange }: TableLi
 interface HiddenQRCanvasProps {
   tables: TableData[];
   canvasRefs: React.MutableRefObject<Map<string, HTMLDivElement>>;
+  restaurantSlug: string;
 }
 
-function HiddenQRCanvases({ tables, canvasRefs }: HiddenQRCanvasProps) {
+function HiddenQRCanvases({ tables, canvasRefs, restaurantSlug }: HiddenQRCanvasProps) {
   return (
     <div className="hidden" aria-hidden="true">
       {tables.map((table) => (
@@ -748,7 +738,7 @@ function HiddenQRCanvases({ tables, canvasRefs }: HiddenQRCanvasProps) {
           }}
         >
           <QRCodeCanvas
-            value={buildMenuUrl(table.tableNumber)}
+            value={buildMenuUrl(restaurantSlug, table.tableNumber)}
             size={512}
             bgColor="#FFFFFF"
             fgColor="#000000"
@@ -768,6 +758,9 @@ function HiddenQRCanvases({ tables, canvasRefs }: HiddenQRCanvasProps) {
 export default function MasalarPage() {
   // State
   const [tables, setTables] = useState<TableData[]>(INITIAL_TABLES);
+  const [restaurantId, setRestaurantId] = useState<string | null>(null);
+  const [restaurantSlug, setRestaurantSlug] = useState('');
+  const [isPageLoading, setIsPageLoading] = useState(true);
   const [editMode, setEditMode] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [gridColumns, setGridColumns] = useState(6);
@@ -789,6 +782,51 @@ export default function MasalarPage() {
 
   // Refs for bulk QR download
   const qrCanvasRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+
+  // ---------------------------------------------------------------------------
+  // Supabase Fetch
+  // ---------------------------------------------------------------------------
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: restaurant } = await supabase
+          .from('restaurants')
+          .select('id, slug')
+          .eq('owner_id', user.id)
+          .single();
+
+        if (!restaurant) return;
+        setRestaurantId(restaurant.id);
+        setRestaurantSlug(restaurant.slug);
+
+        const { data: dbTables } = await supabase
+          .from('tables')
+          .select('*')
+          .eq('restaurant_id', restaurant.id)
+          .order('table_number');
+
+        if (dbTables) {
+          setTables(dbTables.map(t => ({
+            id: t.id,
+            tableNumber: t.table_number,
+            capacity: t.capacity,
+            status: t.status as TableStatus,
+            position: t.position as { x: number; y: number },
+          })));
+        }
+      } catch {
+        toast.error('Veriler yuklenemedi.');
+      } finally {
+        setIsPageLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
 
   // ---------------------------------------------------------------------------
   // Stats
@@ -814,14 +852,15 @@ export default function MasalarPage() {
   // ---------------------------------------------------------------------------
 
   const handleAddTable = useCallback(
-    (tableNumber: string, capacity: number) => {
+    async (tableNumber: string, capacity: number) => {
       const position = pendingPosition ?? {
         x: tables.length % gridColumns,
         y: Math.floor(tables.length / gridColumns),
       };
 
+      const tempId = `t${Date.now()}`;
       const newTable: TableData = {
-        id: `t${Date.now()}`,
+        id: tempId,
         tableNumber,
         capacity,
         status: 'empty',
@@ -830,12 +869,27 @@ export default function MasalarPage() {
 
       setTables((prev) => [...prev, newTable]);
       setPendingPosition(null);
+
+      if (restaurantId) {
+        const supabase = createClient();
+        const { data, error } = await supabase.from('tables').insert({
+          restaurant_id: restaurantId,
+          table_number: tableNumber,
+          capacity,
+          status: 'empty',
+          position,
+        }).select().single();
+        if (data) {
+          setTables(prev => prev.map(t => t.id === tempId ? { ...newTable, id: data.id } : t));
+        }
+        if (error) toast.error('Masa eklenemedi.');
+      }
     },
-    [pendingPosition, tables.length, gridColumns]
+    [pendingPosition, tables.length, gridColumns, restaurantId]
   );
 
   const handleEditTable = useCallback(
-    (tableNumber: string, capacity: number) => {
+    async (tableNumber: string, capacity: number) => {
       if (!editingTable) return;
       setTables((prev) =>
         prev.map((t) =>
@@ -844,24 +898,46 @@ export default function MasalarPage() {
             : t
         )
       );
+
+      if (restaurantId) {
+        const supabase = createClient();
+        const { error } = await supabase.from('tables').update({
+          table_number: tableNumber,
+          capacity,
+        }).eq('id', editingTable.id);
+        if (error) toast.error('Masa guncellenemedi.');
+      }
+
       setEditingTable(null);
     },
-    [editingTable]
+    [editingTable, restaurantId]
   );
 
-  const handleDeleteTable = useCallback(() => {
+  const handleDeleteTable = useCallback(async () => {
     if (!deleteTable) return;
     setTables((prev) => prev.filter((t) => t.id !== deleteTable.id));
+
+    if (restaurantId) {
+      const supabase = createClient();
+      const { error } = await supabase.from('tables').delete().eq('id', deleteTable.id);
+      if (error) toast.error('Masa silinemedi.');
+    }
+
     setDeleteTable(null);
-  }, [deleteTable]);
+  }, [deleteTable, restaurantId]);
 
   const handleTableMove = useCallback(
-    (tableId: string, position: { x: number; y: number }) => {
+    async (tableId: string, position: { x: number; y: number }) => {
       setTables((prev) =>
         prev.map((t) => (t.id === tableId ? { ...t, position } : t))
       );
+
+      if (restaurantId) {
+        const supabase = createClient();
+        await supabase.from('tables').update({ position }).eq('id', tableId);
+      }
     },
-    []
+    [restaurantId]
   );
 
   const handleTableRemove = useCallback((tableId: string) => {
@@ -883,12 +959,17 @@ export default function MasalarPage() {
   }, []);
 
   const handleStatusChange = useCallback(
-    (tableId: string, status: TableStatus) => {
+    async (tableId: string, status: TableStatus) => {
       setTables((prev) =>
         prev.map((t) => (t.id === tableId ? { ...t, status } : t))
       );
+
+      if (restaurantId) {
+        const supabase = createClient();
+        await supabase.from('tables').update({ status }).eq('id', tableId);
+      }
     },
-    []
+    [restaurantId]
   );
 
   // ---------------------------------------------------------------------------
@@ -985,9 +1066,9 @@ export default function MasalarPage() {
       }
 
       const blob = await zip.generateAsync({ type: 'blob' });
-      saveAs(blob, `qr-kodlari-${RESTAURANT_SLUG}.zip`);
+      saveAs(blob, `qr-kodlari-${restaurantSlug || 'restoran'}.zip`);
     } catch {
-      // Silently handle errors - in production we'd show a toast
+      toast.error('QR kodlari indirilemedi.');
     } finally {
       setBulkDownloading(false);
     }
@@ -996,6 +1077,14 @@ export default function MasalarPage() {
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
+
+  if (isPageLoading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-accent-orange border-t-transparent" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -1307,6 +1396,7 @@ export default function MasalarPage() {
         open={qrDetailOpen}
         onOpenChange={setQrDetailOpen}
         table={qrDetailTable}
+        restaurantSlug={restaurantSlug}
       />
 
       {/* Delete Confirmation Dialog */}
@@ -1337,7 +1427,7 @@ export default function MasalarPage() {
       />
 
       {/* Hidden QR Canvases for bulk download */}
-      <HiddenQRCanvases tables={tables} canvasRefs={qrCanvasRefs} />
+      <HiddenQRCanvases tables={tables} canvasRefs={qrCanvasRefs} restaurantSlug={restaurantSlug} />
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import {
   TrendingUp,
   TrendingDown,
@@ -35,6 +35,7 @@ import {
 } from 'recharts';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 
 // =============================================================================
 // Types
@@ -79,57 +80,11 @@ interface FeedbackItem {
 // Mock Data
 // =============================================================================
 
-const MOCK_DAILY_REVENUE: RevenueDataPoint[] = [
-  { label: '8 Mar', gelir: 12400, siparis: 85 },
-  { label: '9 Mar', gelir: 14200, siparis: 98 },
-  { label: '10 Mar', gelir: 11800, siparis: 82 },
-  { label: '11 Mar', gelir: 15600, siparis: 110 },
-  { label: '12 Mar', gelir: 13400, siparis: 95 },
-  { label: '13 Mar', gelir: 21000, siparis: 156 },
-  { label: '14 Mar', gelir: 24500, siparis: 178 },
-];
-
-const MOCK_WEEKLY_REVENUE: RevenueDataPoint[] = [
-  { label: 'Hft 1', gelir: 72000, siparis: 520 },
-  { label: 'Hft 2', gelir: 85600, siparis: 610 },
-  { label: 'Hft 3', gelir: 79200, siparis: 565 },
-  { label: 'Hft 4', gelir: 92400, siparis: 680 },
-];
-
-const MOCK_MONTHLY_REVENUE: RevenueDataPoint[] = [
-  { label: 'Oca', gelir: 245000, siparis: 1820 },
-  { label: 'Sub', gelir: 268000, siparis: 1950 },
-  { label: 'Mar', gelir: 312000, siparis: 2240 },
-];
-
-const MOCK_TOP_PRODUCTS: ProductData[] = [
-  { name: 'Izgara Kofte', adet: 342, gelir: 17100 },
-  { name: 'Karisik Pizza', adet: 288, gelir: 23040 },
-  { name: 'Tavuk Salata', adet: 265, gelir: 11925 },
-  { name: 'Hamburger Menu', adet: 230, gelir: 16100 },
-  { name: 'Adana Kebap', adet: 198, gelir: 15840 },
-  { name: 'Lahmacun', adet: 176, gelir: 7040 },
-  { name: 'Pide Cesitleri', adet: 154, gelir: 10780 },
-];
-
-const MOCK_BOTTOM_PRODUCTS: ProductData[] = [
-  { name: 'Meyve Tabagi', adet: 12, gelir: 720 },
-  { name: 'Sogan Halkasi', adet: 18, gelir: 540 },
-  { name: 'Tiramisu', adet: 22, gelir: 1320 },
-  { name: 'Cheesecake', adet: 28, gelir: 1960 },
-  { name: 'Cikolata Sufle', adet: 34, gelir: 2380 },
-];
+// Revenue & product data fetched from Supabase (see useEffect in component)
 
 const CATEGORY_COLORS = ['#FF6B2B', '#00D4FF', '#7C3AED', '#10B981', '#F59E0B', '#EF4444', '#EC4899'];
 
-const MOCK_CATEGORY_SALES: CategorySalesData[] = [
-  { name: 'Ana Yemekler', value: 42, color: CATEGORY_COLORS[0] },
-  { name: 'Pizzalar', value: 22, color: CATEGORY_COLORS[1] },
-  { name: 'Salatalar', value: 12, color: CATEGORY_COLORS[2] },
-  { name: 'Icecekler', value: 10, color: CATEGORY_COLORS[3] },
-  { name: 'Tatlilar', value: 8, color: CATEGORY_COLORS[4] },
-  { name: 'Baslangiclar', value: 6, color: CATEGORY_COLORS[5] },
-];
+// Category sales fetched from Supabase
 
 const HEATMAP_HOURS = ['10', '11', '12', '13', '14', '15', '16', '17', '18', '19', '20', '21', '22', '23'];
 const HEATMAP_DAYS = ['Pzt', 'Sal', 'Car', 'Per', 'Cum', 'Cmt', 'Paz'];
@@ -144,18 +99,7 @@ const MOCK_HEATMAP: number[][] = [
   [5, 8, 22, 28, 20, 12, 7, 10, 18, 25, 30, 22, 14, 5],
 ];
 
-const MOCK_TABLE_OCCUPANCY: TableOccupancy[] = [
-  { table: 'Masa 1', occupancyRate: 85, totalOrders: 42, avgDuration: 55 },
-  { table: 'Masa 2', occupancyRate: 72, totalOrders: 36, avgDuration: 48 },
-  { table: 'Masa 3', occupancyRate: 90, totalOrders: 45, avgDuration: 62 },
-  { table: 'Masa 4', occupancyRate: 45, totalOrders: 22, avgDuration: 38 },
-  { table: 'Masa 5', occupancyRate: 68, totalOrders: 34, avgDuration: 52 },
-  { table: 'Masa 6', occupancyRate: 78, totalOrders: 39, avgDuration: 45 },
-  { table: 'Masa 7', occupancyRate: 55, totalOrders: 28, avgDuration: 42 },
-  { table: 'Masa 8', occupancyRate: 92, totalOrders: 48, avgDuration: 68 },
-  { table: 'Masa 9', occupancyRate: 38, totalOrders: 18, avgDuration: 35 },
-  { table: 'Masa 10', occupancyRate: 82, totalOrders: 41, avgDuration: 58 },
-];
+// Table occupancy fetched from Supabase
 
 const MOCK_QR_STATS = {
   totalScans: 4826,
@@ -403,6 +347,133 @@ export default function AnalitikPage() {
   const [dateRange, setDateRange] = useState<DateRange>('30gun');
   const [revenueView, setRevenueView] = useState<RevenueView>('gunluk');
 
+  // Real data states
+  const [dailyRevenue, setDailyRevenue] = useState<RevenueDataPoint[]>([]);
+  const [weeklyRevenue, setWeeklyRevenue] = useState<RevenueDataPoint[]>([]);
+  const [monthlyRevenue, setMonthlyRevenue] = useState<RevenueDataPoint[]>([]);
+  const [topProducts, setTopProducts] = useState<ProductData[]>([]);
+  const [bottomProducts, setBottomProducts] = useState<ProductData[]>([]);
+  const [categorySales, setCategorySales] = useState<CategorySalesData[]>([]);
+  const [tableOccupancy, setTableOccupancy] = useState<TableOccupancy[]>([]);
+
+  // Supabase fetch
+  useEffect(() => {
+    async function fetchAnalytics() {
+      try {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+
+        const { data: restaurant } = await supabase
+          .from('restaurants')
+          .select('id')
+          .eq('owner_id', user.id)
+          .single();
+        if (!restaurant) return;
+
+        const ninetyDaysAgo = new Date();
+        ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
+
+        const [ordersResult, tablesResult] = await Promise.all([
+          supabase
+            .from('orders')
+            .select('total_amount, created_at, items')
+            .eq('restaurant_id', restaurant.id)
+            .gte('created_at', ninetyDaysAgo.toISOString())
+            .neq('status', 'cancelled'),
+          supabase
+            .from('tables')
+            .select('id, table_number, status')
+            .eq('restaurant_id', restaurant.id),
+        ]);
+
+        const orders = ordersResult.data || [];
+        const tables = tablesResult.data || [];
+        const now = new Date();
+        const monthNames = ['Oca', 'Sub', 'Mar', 'Nis', 'May', 'Haz', 'Tem', 'Agu', 'Eyl', 'Eki', 'Kas', 'Ara'];
+
+        // Daily (last 7 days)
+        const dailyMap = new Map<string, { label: string; gelir: number; siparis: number }>();
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date(now);
+          d.setDate(d.getDate() - i);
+          const key = d.toISOString().split('T')[0];
+          dailyMap.set(key, { label: `${d.getDate()} ${monthNames[d.getMonth()]}`, gelir: 0, siparis: 0 });
+        }
+
+        // Product counts
+        const productCounts = new Map<string, { adet: number; gelir: number }>();
+
+        orders.forEach(o => {
+          const key = o.created_at.split('T')[0];
+          const daily = dailyMap.get(key);
+          if (daily) {
+            daily.gelir += Number(o.total_amount);
+            daily.siparis += 1;
+          }
+          const items = o.items as Array<{ name: string; quantity: number; price: number }>;
+          if (Array.isArray(items)) {
+            items.forEach(item => {
+              const e = productCounts.get(item.name) || { adet: 0, gelir: 0 };
+              e.adet += item.quantity;
+              e.gelir += item.price * item.quantity;
+              productCounts.set(item.name, e);
+            });
+          }
+        });
+
+        setDailyRevenue(Array.from(dailyMap.values()).map(v => ({ ...v, gelir: Math.round(v.gelir) })));
+
+        // Weekly (last 4 weeks)
+        const wkData: RevenueDataPoint[] = [];
+        for (let w = 3; w >= 0; w--) {
+          const ws = new Date(now); ws.setDate(ws.getDate() - (w + 1) * 7);
+          const we = new Date(now); we.setDate(we.getDate() - w * 7);
+          let gelir = 0, siparis = 0;
+          orders.forEach(o => { const d = new Date(o.created_at); if (d >= ws && d < we) { gelir += Number(o.total_amount); siparis++; } });
+          wkData.push({ label: `Hft ${4 - w}`, gelir: Math.round(gelir), siparis });
+        }
+        setWeeklyRevenue(wkData);
+
+        // Monthly (last 3 months)
+        const moData: RevenueDataPoint[] = [];
+        for (let m = 2; m >= 0; m--) {
+          const d = new Date(now); d.setMonth(d.getMonth() - m);
+          const mk = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          let gelir = 0, siparis = 0;
+          orders.forEach(o => { if (o.created_at.substring(0, 7) === mk) { gelir += Number(o.total_amount); siparis++; } });
+          moData.push({ label: monthNames[d.getMonth()], gelir: Math.round(gelir), siparis });
+        }
+        setMonthlyRevenue(moData);
+
+        // Products
+        const prodArr = Array.from(productCounts.entries())
+          .map(([name, d]) => ({ name, adet: d.adet, gelir: Math.round(d.gelir) }))
+          .sort((a, b) => b.adet - a.adet);
+        setTopProducts(prodArr.slice(0, 7));
+        setBottomProducts(prodArr.length > 5 ? prodArr.slice(-5).reverse() : []);
+
+        // Category sales (from top products as proxy)
+        const totalSales = prodArr.reduce((s, p) => s + p.adet, 0);
+        setCategorySales(prodArr.slice(0, 6).map((p, i) => ({
+          name: p.name,
+          value: totalSales > 0 ? Math.round((p.adet / totalSales) * 100) : 0,
+          color: CATEGORY_COLORS[i % CATEGORY_COLORS.length],
+        })));
+
+        // Table occupancy
+        setTableOccupancy(tables.map(t => ({
+          table: `Masa ${t.table_number}`,
+          occupancyRate: t.status === 'occupied' ? 80 : t.status === 'reserved' ? 50 : 20,
+          totalOrders: 0,
+          avgDuration: 0,
+        })));
+
+      } catch (err) { console.error('[Analitik] Veri yuklenemedi:', err); }
+    }
+    fetchAnalytics();
+  }, []);
+
   const heatmapMax = useMemo(
     () => Math.max(...MOCK_HEATMAP.flat()),
     []
@@ -411,13 +482,13 @@ export default function AnalitikPage() {
   const revenueData = useMemo(() => {
     switch (revenueView) {
       case 'gunluk':
-        return MOCK_DAILY_REVENUE;
+        return dailyRevenue;
       case 'haftalik':
-        return MOCK_WEEKLY_REVENUE;
+        return weeklyRevenue;
       case 'aylik':
-        return MOCK_MONTHLY_REVENUE;
+        return monthlyRevenue;
     }
-  }, [revenueView]);
+  }, [revenueView, dailyRevenue, weeklyRevenue, monthlyRevenue]);
 
   const totalRevenue = useMemo(
     () => revenueData.reduce((sum, d) => sum + d.gelir, 0),
@@ -655,7 +726,7 @@ export default function AnalitikPage() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 layout="vertical"
-                data={MOCK_TOP_PRODUCTS}
+                data={topProducts}
                 margin={{ left: 10, right: 10 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
@@ -698,7 +769,7 @@ export default function AnalitikPage() {
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 layout="vertical"
-                data={MOCK_BOTTOM_PRODUCTS}
+                data={bottomProducts}
                 margin={{ left: 10, right: 10 }}
               >
                 <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
@@ -741,7 +812,7 @@ export default function AnalitikPage() {
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
                 <Pie
-                  data={MOCK_CATEGORY_SALES}
+                  data={categorySales}
                   cx="50%"
                   cy="50%"
                   innerRadius={55}
@@ -750,7 +821,7 @@ export default function AnalitikPage() {
                   dataKey="value"
                   stroke="none"
                 >
-                  {MOCK_CATEGORY_SALES.map((entry, index) => (
+                  {categorySales.map((entry, index) => (
                     <Cell key={`cell-${index}`} fill={entry.color} />
                   ))}
                 </Pie>
@@ -760,7 +831,7 @@ export default function AnalitikPage() {
           </div>
           {/* Legend */}
           <div className="mt-2 grid grid-cols-2 gap-x-4 gap-y-1.5">
-            {MOCK_CATEGORY_SALES.map((cat) => (
+            {categorySales.map((cat) => (
               <div key={cat.name} className="flex items-center gap-2">
                 <span
                   className="h-2.5 w-2.5 shrink-0 rounded-full"
@@ -854,7 +925,7 @@ export default function AnalitikPage() {
             </div>
           </div>
           <div className="flex flex-col gap-2.5">
-            {MOCK_TABLE_OCCUPANCY.map((table) => (
+            {tableOccupancy.map((table) => (
               <div key={table.table} className="flex items-center gap-3">
                 <span className="w-16 shrink-0 text-xs font-medium text-text-muted">
                   {table.table}

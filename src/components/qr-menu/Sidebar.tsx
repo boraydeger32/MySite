@@ -19,6 +19,9 @@ import {
   ChevronRight,
   Menu,
   X,
+  Users,
+  CalendarDays,
+  Package,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -32,6 +35,7 @@ interface SidebarProps {
   restaurantName?: string;
   restaurantLogo?: string;
   className?: string;
+  onLogout?: () => void;
 }
 
 const NAV_ITEMS: NavItem[] = [
@@ -42,6 +46,9 @@ const NAV_ITEMS: NavItem[] = [
   { label: 'Tema', href: '/qr-menu/dashboard/tema', icon: Palette },
   { label: 'Analitik', href: '/qr-menu/dashboard/analitik', icon: BarChart3 },
   { label: 'Kampanyalar', href: '/qr-menu/dashboard/kampanyalar', icon: Megaphone },
+  { label: 'Personel', href: '/qr-menu/dashboard/personel', icon: Users },
+  { label: 'Rezervasyonlar', href: '/qr-menu/dashboard/rezervasyonlar', icon: CalendarDays },
+  { label: 'Stok', href: '/qr-menu/dashboard/stok', icon: Package },
   { label: 'Ayarlar', href: '/qr-menu/dashboard/ayarlar', icon: Settings },
 ];
 
@@ -113,6 +120,7 @@ export default function Sidebar({
   restaurantName = 'Restoran',
   restaurantLogo,
   className,
+  onLogout,
 }: SidebarProps) {
   const pathname = usePathname();
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -327,7 +335,7 @@ export default function Sidebar({
                 {BOTTOM_ITEMS.map((item) => renderMobileNavItem(item))}
                 <motion.div variants={itemVariants}>
                   <button
-                    onClick={closeMobileMenu}
+                    onClick={() => { closeMobileMenu(); onLogout?.(); }}
                     className="flex min-h-[44px] w-full items-center gap-3 rounded-lg px-4 py-3 text-base font-medium text-text-muted transition-colors hover:bg-white/5 hover:text-red-400"
                   >
                     <LogOut className="h-5 w-5 shrink-0" />
@@ -389,6 +397,7 @@ export default function Sidebar({
           {BOTTOM_ITEMS.map((item) => renderNavItem(item, isCollapsed))}
 
           <button
+            onClick={onLogout}
             className={cn(
               'group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium text-text-muted transition-all duration-200 hover:bg-white/5 hover:text-red-400',
               isCollapsed && 'justify-center px-0'

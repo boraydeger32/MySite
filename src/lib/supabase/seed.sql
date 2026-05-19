@@ -38,6 +38,8 @@ BEGIN
   -- 2. User Profile (demo restaurant owner)
   -- ---------------------------------------------------------------------------
   -- Create in auth.users first
+  -- NOTE: In production, create users via Supabase Auth API or Dashboard.
+  -- Never use hardcoded passwords. Use env vars or generate random passwords.
   INSERT INTO auth.users (
     instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
     recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data,
@@ -45,8 +47,7 @@ BEGIN
   )
   VALUES (
     '00000000-0000-0000-0000-000000000000', demo_user_id, 'authenticated', 'authenticated', 'demo@lezzetduragi.com',
-    -- password: demopassword (bcrypt hash)
-    crypt('demopassword', gen_salt('bf')), now(), now(), now(),
+    crypt(coalesce(current_setting('app.demo_password', true), gen_random_uuid()::text), gen_salt('bf')), now(), now(), now(),
     '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''
   )
   ON CONFLICT (id) DO NOTHING;
@@ -388,22 +389,24 @@ BEGIN
   -- ---------------------------------------------------------------------------
   -- 10. Super Admin User Profile
   -- ---------------------------------------------------------------------------
-  -- Create in auth.users first
+  -- NOTE: Create super admin via Supabase Dashboard or Auth API in production.
+  -- Set the password via: SET app.admin_password = 'your-secure-password';
+  -- before running this seed, or it will generate a random UUID as password.
   INSERT INTO auth.users (
     instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
     recovery_sent_at, last_sign_in_at, raw_app_meta_data, raw_user_meta_data,
     created_at, updated_at, confirmation_token, email_change, email_change_token_new, recovery_token
   )
   VALUES (
-    '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000099', 'authenticated', 'authenticated', 'boraydeger@hotmail.com',
-    -- password: Devspark2026! (bcrypt hash)
-    crypt('Devspark2026!', gen_salt('bf')), now(), now(), now(),
+    '00000000-0000-0000-0000-000000000000', '00000000-0000-0000-0000-000000000099', 'authenticated', 'authenticated',
+    coalesce(current_setting('app.admin_email', true), 'admin@example.com'),
+    crypt(coalesce(current_setting('app.admin_password', true), gen_random_uuid()::text), gen_salt('bf')), now(), now(), now(),
     '{"provider":"email","providers":["email"]}', '{}', now(), now(), '', '', '', ''
   )
   ON CONFLICT (id) DO NOTHING;
 
   INSERT INTO user_profiles (id, full_name, phone, role)
-  VALUES ('00000000-0000-0000-0000-000000000099', 'Super Admin', '+90 500 000 0000', 'super_admin')
+  VALUES ('00000000-0000-0000-0000-000000000099', 'Super Admin', NULL, 'super_admin')
   ON CONFLICT (id) DO NOTHING;
 
 END $$;

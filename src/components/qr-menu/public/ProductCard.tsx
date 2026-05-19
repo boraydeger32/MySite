@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+// React hooks imported via useTranslation
 import { motion } from 'framer-motion';
 import {
   Star,
@@ -13,6 +13,7 @@ import {
   ImageIcon,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslation } from '@/components/qr-menu/public/LanguageSwitcher';
 import type { MenuItem } from '@/lib/supabase/types';
 
 // =============================================================================
@@ -143,6 +144,11 @@ const cardVariants = {
 // Grid Layout Card
 // ---------------------------------------------------------------------------
 
+function useOutOfStockLabel() {
+  const { t } = useTranslation();
+  return t('product.outOfStock');
+}
+
 function GridCard({
   item,
   onSelect,
@@ -152,6 +158,7 @@ function GridCard({
   borderRadius,
   className,
 }: ProductCardProps) {
+  const outOfStockLabel = useOutOfStockLabel();
   const hasAllergens = item.allergens && item.allergens.length > 0;
   const hasBadges = item.badges && item.badges.length > 0;
 
@@ -211,7 +218,7 @@ function GridCard({
         {!item.is_available && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/60">
             <span className="rounded-full bg-red-500/90 px-3 py-1 text-xs font-bold text-white">
-              Tukendi
+              {outOfStockLabel}
             </span>
           </div>
         )}
@@ -281,6 +288,7 @@ function ListCard({
   borderRadius,
   className,
 }: ProductCardProps) {
+  const outOfStockLabel = useOutOfStockLabel();
   const hasAllergens = item.allergens && item.allergens.length > 0;
   const hasBadges = item.badges && item.badges.length > 0;
 
@@ -333,7 +341,7 @@ function ListCard({
 
         {!item.is_available && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/60">
-            <span className="text-[8px] font-bold text-white">Tukendi</span>
+            <span className="text-[8px] font-bold text-white">{outOfStockLabel}</span>
           </div>
         )}
       </div>
@@ -429,6 +437,7 @@ function LargeCard({
   borderRadius,
   className,
 }: ProductCardProps) {
+  const outOfStockLabel = useOutOfStockLabel();
   const hasAllergens = item.allergens && item.allergens.length > 0;
   const hasBadges = item.badges && item.badges.length > 0;
 
@@ -490,7 +499,7 @@ function LargeCard({
         {!item.is_available && (
           <div className="absolute inset-0 flex items-center justify-center bg-black/60">
             <span className="rounded-full bg-red-500/90 px-2 py-0.5 text-[10px] font-bold text-white">
-              Tukendi
+              {outOfStockLabel}
             </span>
           </div>
         )}

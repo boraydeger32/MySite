@@ -20,6 +20,9 @@ import {
   Palette,
   BarChart3,
   Megaphone,
+  Users,
+  CalendarDays,
+  Package,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -78,6 +81,9 @@ const BREADCRUMB_LABELS: Record<string, string> = {
   analitik: 'Analitik',
   kampanyalar: 'Kampanyalar',
   ayarlar: 'Ayarlar',
+  personel: 'Personel',
+  rezervasyonlar: 'Rezervasyonlar',
+  stok: 'Stok Yonetimi',
 };
 
 const MOBILE_NAV_ITEMS = [
@@ -88,6 +94,9 @@ const MOBILE_NAV_ITEMS = [
   { label: 'Tema', href: '/qr-menu/dashboard/tema', icon: Palette },
   { label: 'Analitik', href: '/qr-menu/dashboard/analitik', icon: BarChart3 },
   { label: 'Kampanyalar', href: '/qr-menu/dashboard/kampanyalar', icon: Megaphone },
+  { label: 'Personel', href: '/qr-menu/dashboard/personel', icon: Users },
+  { label: 'Rezervasyonlar', href: '/qr-menu/dashboard/rezervasyonlar', icon: CalendarDays },
+  { label: 'Stok', href: '/qr-menu/dashboard/stok', icon: Package },
   { label: 'Ayarlar', href: '/qr-menu/dashboard/ayarlar', icon: Settings },
 ];
 
@@ -98,26 +107,39 @@ export default function DashboardLayout({
 }>) {
   const pathname = usePathname();
   const router = useRouter();
-  const [notificationCount] = useState(3);
+  const [notificationCount] = useState(0);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
-  const [restaurantSlug, setRestaurantSlug] = useState('lezzet-duragi');
+  const [restaurantSlug, setRestaurantSlug] = useState('');
+  const [restaurantName, setRestaurantName] = useState('');
+  const [userName, setUserName] = useState('');
 
   useEffect(() => {
-    async function fetchSlug() {
+    async function fetchUserData() {
       try {
         const supabase = createClient();
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
-          const { data } = await supabase
+          // Fetch restaurant info
+          const { data: restaurant } = await supabase
             .from('restaurants')
-            .select('slug')
+            .select('slug, name')
             .eq('owner_id', user.id)
             .single();
-          if (data?.slug) setRestaurantSlug(data.slug);
+          if (restaurant) {
+            setRestaurantSlug(restaurant.slug);
+            setRestaurantName(restaurant.name);
+          }
+          // Fetch user profile
+          const { data: profile } = await supabase
+            .from('user_profiles')
+            .select('full_name')
+            .eq('id', user.id)
+            .single();
+          if (profile?.full_name) setUserName(profile.full_name);
         }
-      } catch { /* fallback to demo-restoran */ }
+      } catch { /* fallback */ }
     }
-    fetchSlug();
+    fetchUserData();
   }, []);
 
   const closeMobileSheet = useCallback(() => {
@@ -172,7 +194,7 @@ export default function DashboardLayout({
 
       {/* Desktop Sidebar - hidden on mobile via Sidebar's own responsive logic */}
       <div className="hidden lg:block">
-        <Sidebar />
+        <Sidebar restaurantName={restaurantName} onLogout={handleLogout} />
       </div>
 
       {/* Main content area - offset for desktop sidebar */}
@@ -202,7 +224,7 @@ export default function DashboardLayout({
                     <UtensilsCrossed className="h-5 w-5 text-accent-orange" />
                   </span>
                   <span className="font-display text-base font-bold text-text-main">
-                    Restoran
+                    {restaurantName || 'Restoran'}
                   </span>
                 </SheetTitle>
               </SheetHeader>
@@ -337,11 +359,11 @@ export default function DashboardLayout({
                   <Avatar className="h-7 w-7">
                     <AvatarImage src="" alt="" />
                     <AvatarFallback className="bg-accent-orange/10 text-xs font-semibold text-accent-orange">
-                      RS
+                      {userName ? userName.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'RS'}
                     </AvatarFallback>
                   </Avatar>
                   <span className="hidden text-sm font-medium text-text-main md:inline-block">
-                    Restoran Sahibi
+                    {userName || 'Restoran Sahibi'}
                   </span>
                 </button>
               </DropdownMenuTrigger>

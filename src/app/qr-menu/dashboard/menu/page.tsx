@@ -48,7 +48,8 @@ import type {
 // Constants
 // ---------------------------------------------------------------------------
 
-const MOCK_RESTAURANT_ID = 'demo-restaurant-001';
+import { DEMO_RESTAURANT_ID } from '@/lib/constants';
+const MOCK_RESTAURANT_ID = DEMO_RESTAURANT_ID;
 
 // ---------------------------------------------------------------------------
 // Mock Data - used when Supabase is not connected
@@ -597,6 +598,7 @@ export default function MenuManagementPage() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [restaurantSlug, setRestaurantSlug] = useState('lezzet-duragi');
+  const [restaurantId, setRestaurantId] = useState<string>(MOCK_RESTAURANT_ID);
 
   // Modal states
   const [isItemFormOpen, setIsItemFormOpen] = useState(false);
@@ -614,29 +616,34 @@ export default function MenuManagementPage() {
       try {
         const supabase = createClient();
 
-        // Fetch restaurant slug for current user
+        // Fetch restaurant for current user
         const { data: { user } } = await supabase.auth.getUser();
-        if (user) {
-          const { data: restaurant } = await supabase
-            .from('restaurants')
-            .select('slug')
-            .eq('owner_id', user.id)
-            .single();
-          if (restaurant?.slug) setRestaurantSlug(restaurant.slug);
-        }
+        if (!user) throw new Error('No user');
 
-        // Attempt to fetch categories
+        const { data: restaurant } = await supabase
+          .from('restaurants')
+          .select('id, slug')
+          .eq('owner_id', user.id)
+          .single();
+
+        if (!restaurant) throw new Error('No restaurant');
+        setRestaurantSlug(restaurant.slug);
+        setRestaurantId(restaurant.id);
+
+        // Fetch categories filtered by restaurant_id
         const { data: catData, error: catError } = await supabase
           .from('menu_categories')
           .select('*')
+          .eq('restaurant_id', restaurant.id)
           .order('sort_order', { ascending: true });
 
         if (catError) throw catError;
 
-        // Attempt to fetch items
+        // Fetch items filtered by restaurant_id
         const { data: itemData, error: itemError } = await supabase
           .from('menu_items')
           .select('*')
+          .eq('restaurant_id', restaurant.id)
           .order('sort_order', { ascending: true });
 
         if (itemError) throw itemError;
@@ -648,11 +655,9 @@ export default function MenuManagementPage() {
         if (catData && catData.length > 0) {
           setSelectedCategoryId(catData[0].id);
         }
-      } catch {
-        // Fallback to mock data when Supabase is not available
-        setCategories(MOCK_CATEGORIES);
-        setItems(MOCK_ITEMS);
-        setSelectedCategoryId(MOCK_CATEGORIES[0]?.id ?? null);
+      } catch (err) {
+        console.error('[Menu] Veri yuklenemedi:', err);
+        toast.error('Menu verileri yuklenemedi.', { description: 'Lutfen sayfayi yenileyin.' });
       } finally {
         setIsLoading(false);
       }
@@ -743,7 +748,7 @@ export default function MenuManagementPage() {
         );
         await Promise.all(updates);
       } catch {
-        // Silent fail - local state is already updated
+        toast.error('Degisiklik kaydedilemedi.');
       }
     },
     []
@@ -755,7 +760,7 @@ export default function MenuManagementPage() {
       const newSortOrder = categories.length;
       const newCategory: MenuCategory = {
         id: newId,
-        restaurant_id: MOCK_RESTAURANT_ID,
+        restaurant_id: restaurantId,
         name: category.name,
         icon: category.icon,
         color: category.color,
@@ -781,7 +786,7 @@ export default function MenuManagementPage() {
         const supabase = createClient();
         const insert: MenuCategoryInsert = {
           id: newId,
-          restaurant_id: MOCK_RESTAURANT_ID,
+          restaurant_id: restaurantId,
           name: category.name,
           icon: category.icon,
           color: category.color,
@@ -792,10 +797,10 @@ export default function MenuManagementPage() {
         };
         await supabase.from('menu_categories').insert(insert);
       } catch {
-        // Silent fail - local state is already updated
+        toast.error('Degisiklik kaydedilemedi.');
       }
     },
-    [categories.length, selectedCategoryId]
+    [categories.length, selectedCategoryId, restaurantId]
   );
 
   const handleCategoryEdit = useCallback(async (category: SortableCategory) => {
@@ -833,7 +838,7 @@ export default function MenuManagementPage() {
         })
         .eq('id', category.id);
     } catch {
-      // Silent fail
+      toast.error('Degisiklik kaydedilemedi.');
     }
   }, []);
 
@@ -863,7 +868,7 @@ export default function MenuManagementPage() {
         const supabase = createClient();
         await supabase.from('menu_categories').delete().eq('id', categoryId);
       } catch {
-        // Silent fail
+        toast.error('Degisiklik kaydedilemedi.');
       }
     },
     [categories, categoryItemCounts, selectedCategoryId]
@@ -885,7 +890,7 @@ export default function MenuManagementPage() {
           .update({ is_visible: visible })
           .eq('id', categoryId);
       } catch {
-        // Silent fail
+        toast.error('Degisiklik kaydedilemedi.');
       }
     },
     [categories]
@@ -946,7 +951,7 @@ export default function MenuManagementPage() {
               })
               .eq('id', editingItem.id);
           } catch {
-            // Silent fail
+            toast.error('Degisiklik kaydedilemedi.');
           }
         } else {
           // Create new item
@@ -957,7 +962,7 @@ export default function MenuManagementPage() {
           const newItem: MenuItem = {
             id: newId,
             category_id: categoryId,
-            restaurant_id: MOCK_RESTAURANT_ID,
+            restaurant_id: restaurantId,
             name: data.name as string,
             description: (data.description as string) || null,
             price: data.price as number,
@@ -981,7 +986,7 @@ export default function MenuManagementPage() {
             const insert: MenuItemInsert = {
               id: newId,
               category_id: categoryId,
-              restaurant_id: MOCK_RESTAURANT_ID,
+              restaurant_id: restaurantId,
               name: newItem.name,
               description: newItem.description,
               price: newItem.price,
@@ -996,7 +1001,7 @@ export default function MenuManagementPage() {
             };
             await supabase.from('menu_items').insert(insert);
           } catch {
-            // Silent fail
+            toast.error('Degisiklik kaydedilemedi.');
           }
         }
 
@@ -1006,7 +1011,7 @@ export default function MenuManagementPage() {
         setIsSubmittingItem(false);
       }
     },
-    [editingItem, selectedCategoryId, items]
+    [editingItem, selectedCategoryId, items, restaurantId]
   );
 
   const handleItemEdit = useCallback((item: MenuItem) => {
@@ -1023,7 +1028,7 @@ export default function MenuManagementPage() {
       const supabase = createClient();
       await supabase.from('menu_items').delete().eq('id', itemId);
     } catch {
-      // Silent fail
+      toast.error('Degisiklik kaydedilemedi.');
     }
   }, [items]);
 
@@ -1063,7 +1068,7 @@ export default function MenuManagementPage() {
         };
         await supabase.from('menu_items').insert(insert);
       } catch {
-        // Silent fail
+        toast.error('Degisiklik kaydedilemedi.');
       }
     },
     [items]
@@ -1085,7 +1090,7 @@ export default function MenuManagementPage() {
           .update({ is_available: available })
           .eq('id', itemId);
       } catch {
-        // Silent fail
+        toast.error('Degisiklik kaydedilemedi.');
       }
     },
     [items]
@@ -1139,7 +1144,7 @@ export default function MenuManagementPage() {
           );
         await Promise.all(updates);
       } catch {
-        // Silent fail
+        toast.error('Degisiklik kaydedilemedi.');
       } finally {
         setIsSaving(false);
       }
@@ -1199,7 +1204,7 @@ export default function MenuManagementPage() {
             const newCatId = generateId();
             const newCategory: MenuCategory = {
               id: newCatId,
-              restaurant_id: MOCK_RESTAURANT_ID,
+              restaurant_id: restaurantId,
               name: catName.trim(),
               icon: 'coffee',
               color: '#FF6B2B',
@@ -1218,7 +1223,7 @@ export default function MenuManagementPage() {
           const newItem: MenuItem = {
             id: generateId(),
             category_id: category.id,
-            restaurant_id: MOCK_RESTAURANT_ID,
+            restaurant_id: restaurantId,
             name: name.trim(),
             description: description?.trim() || null,
             price: parseFloat(priceStr ?? '0') || 0,
@@ -1247,7 +1252,7 @@ export default function MenuManagementPage() {
       }
     };
     input.click();
-  }, [categories, items]);
+  }, [categories, items, restaurantId]);
 
   // ---------------------------------------------------------------------------
   // AI Description Mock

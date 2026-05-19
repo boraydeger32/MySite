@@ -41,7 +41,8 @@ import type {
 // Constants
 // ---------------------------------------------------------------------------
 
-const MOCK_RESTAURANT_ID = 'demo-restaurant-001';
+import { DEMO_RESTAURANT_SLUG, DEMO_RESTAURANT_ID } from '@/lib/constants';
+const MOCK_RESTAURANT_ID = DEMO_RESTAURANT_ID;
 
 // ---------------------------------------------------------------------------
 // Demo data for when Supabase is not configured
@@ -51,7 +52,7 @@ const DEMO_RESTAURANT: Restaurant = {
   id: MOCK_RESTAURANT_ID,
   owner_id: 'demo-owner',
   name: 'Demo Restoran',
-  slug: 'demo-restoran',
+  slug: DEMO_RESTAURANT_SLUG,
   logo_url: null,
   cover_url: null,
   theme: {
@@ -663,8 +664,8 @@ function MenuSearchBar({
 
 export default function MasaPageClient() {
   const params = useParams();
-  const slug = params['restoran-slug'] as string;
-  const masaNo = params['masa-no'] as string;
+  const slug = (params['restoran-slug'] as string) || '';
+  const masaNo = (params['masa-no'] as string) || '1';
 
   const { t } = useTranslation();
 
@@ -757,7 +758,7 @@ export default function MasaPageClient() {
         // Supabase not configured or error - fall back to demo data
         if (cancelled) return;
 
-        if (slug === 'demo-restoran') {
+        if (slug === DEMO_RESTAURANT_SLUG) {
           setRestaurant(DEMO_RESTAURANT);
           setCategories(DEMO_CATEGORIES);
           setCartContext(MOCK_RESTAURANT_ID, `table-${masaNo}`);
@@ -914,28 +915,24 @@ export default function MasaPageClient() {
     if (!restaurant) return;
 
     try {
-      const supabase = createClient();
-
-      // Update order with waiter_called flag or create a standalone waiter call
-      const { error: callError } = await supabase
-        .from('orders')
-        .insert({
-          restaurant_id: restaurant.id,
-          table_id: `table-${masaNo}`,
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: restaurant.id,
+          tableId: `table-${masaNo}`,
           items: [],
-          total_amount: 0,
-          status: 'new' as const,
           notes: `Garson cagrisi - Masa ${masaNo}`,
-          waiter_called: true,
-        });
+        }),
+      });
 
-      if (callError) {
-        throw callError;
+      if (!response.ok) {
+        // Waiter call is best-effort, don't block UX
+        console.error('[WaiterCall] API error:', response.status);
       }
 
       toast.success('Garson cagirildi!');
     } catch {
-      // If Supabase fails, still show success for demo purposes
       toast.success('Garson cagirildi!');
     }
   }, [restaurant, masaNo]);
@@ -950,47 +947,41 @@ export default function MasaPageClient() {
     setIsSubmitting(true);
 
     try {
-      const supabase = createClient();
+      // Use server-side API for price verification
+      const response = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          restaurantId: restaurant.id,
+          tableId: `table-${masaNo}`,
+          items: cartItems.map((item) => ({
+            itemId: item.itemId,
+            quantity: item.quantity,
+            modifiers: item.modifiers.map((m) => m.label),
+            notes: item.notes || undefined,
+          })),
+        }),
+      });
 
-      // Convert cart items to order items
-      const orderItems: OrderItem[] = cartItems.map((item) => ({
-        name: item.name,
-        quantity: item.quantity,
-        price: item.price,
-        modifiers: item.modifiers.map(
-          (m) => `${m.label}${m.price > 0 ? ` (+${formatPrice(m.price)})` : ''}`
-        ),
-      }));
+      const result = await response.json();
 
-      const orderData: OrderInsert = {
-        restaurant_id: restaurant.id,
-        table_id: `table-${masaNo}`,
-        items: orderItems,
-        total_amount: totalAmount(),
-        status: 'new',
-        notes: null,
-        waiter_called: false,
-      };
-
-      const { error: orderError } = await supabase
-        .from('orders')
-        .insert(orderData);
-
-      if (orderError) {
-        throw orderError;
+      if (!response.ok) {
+        toast.error('Siparis gonderilemedi.', {
+          description: result.error || 'Bir hata olustu.',
+        });
+        return;
       }
 
-      // Clear cart on success
       clearCart();
       toast.success('Siparisiniz alindi! Afiyet olsun.');
     } catch {
-      // For demo purposes, still clear cart and show success
-      clearCart();
-      toast.success('Siparisiniz alindi! Afiyet olsun.');
+      toast.error('Baglanti hatasi.', {
+        description: 'Siparisiniz gonderilemedi. Lutfen tekrar deneyin.',
+      });
     } finally {
       setIsSubmitting(false);
     }
-  }, [restaurant, cartItems, masaNo, totalAmount, clearCart]);
+  }, [restaurant, cartItems, masaNo, clearCart]);
 
   // ---------------------------------------------------------------------------
   // Extract theme values

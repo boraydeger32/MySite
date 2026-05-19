@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -58,6 +58,7 @@ const itemVariants = {
 
 export default function QRMenuGirisPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -86,9 +87,7 @@ export default function QRMenuGirisPage() {
 
       if (error) {
         toast.error('Giris basarisiz.', {
-          description: error.message === 'Invalid login credentials'
-            ? 'E-posta veya sifre hatali.'
-            : error.message,
+          description: 'E-posta veya sifre hatali.',
         });
         return;
       }
@@ -96,7 +95,8 @@ export default function QRMenuGirisPage() {
       toast.success('Giris basarili!', {
         description: 'Dashboard\'a yonlendiriliyorsunuz...',
       });
-      router.push('/qr-menu/dashboard');
+      const redirectTo = searchParams.get('redirectTo') || '/qr-menu/dashboard';
+      router.push(redirectTo);
     } catch (err) {
       toast.error('Baglanti hatasi.', {
         description: err instanceof Error ? err.message : 'Sunucuya ulasilamadi. Lutfen tekrar deneyiniz.',
@@ -114,7 +114,7 @@ export default function QRMenuGirisPage() {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/MySite/auth/callback`,
+          redirectTo: `${window.location.origin}/auth/callback`,
         },
       });
 

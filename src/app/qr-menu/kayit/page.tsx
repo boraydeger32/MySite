@@ -43,7 +43,10 @@ const registerSchema = z
     password: z
       .string()
       .min(1, 'Sifre gereklidir.')
-      .min(6, 'Sifre en az 6 karakter olmalidir.'),
+      .min(8, 'Sifre en az 8 karakter olmalidir.')
+      .regex(/[A-Z]/, 'Sifre en az bir buyuk harf icermelidir.')
+      .regex(/[a-z]/, 'Sifre en az bir kucuk harf icermelidir.')
+      .regex(/[0-9]/, 'Sifre en az bir rakam icermelidir.'),
     passwordConfirm: z
       .string()
       .min(1, 'Sifre tekrari gereklidir.'),
@@ -142,18 +145,59 @@ export default function QRMenuKayitPage() {
       const userId = authData.user?.id;
 
       if (userId) {
-        // 2. Create restaurant record
+        // 2. Create restaurant record with Turkish-safe slug
+        const turkishMap: Record<string, string> = {
+          'ç': 'c', 'ğ': 'g', 'ı': 'i', 'ö': 'o', 'ş': 's', 'ü': 'u',
+          'Ç': 'c', 'Ğ': 'g', 'İ': 'i', 'Ö': 'o', 'Ş': 's', 'Ü': 'u',
+        };
+        let baseSlug = data.restaurantName
+          .split('')
+          .map((ch) => turkishMap[ch] ?? ch)
+          .join('')
+          .toLowerCase()
+          .replace(/[^a-z0-9\s-]/g, '')
+          .replace(/\s+/g, '-')
+          .replace(/-+/g, '-')
+          .replace(/^-|-$/g, '');
+
+        // Check for slug collisions and append suffix if needed
+        let slug = baseSlug;
+        let suffix = 0;
+        while (true) {
+          const { data: existing } = await supabase
+            .from('restaurants')
+            .select('id')
+            .eq('slug', slug)
+            .maybeSingle();
+          if (!existing) break;
+          suffix++;
+          slug = `${baseSlug}-${suffix}`;
+        }
+
         const { data: restaurant, error: restaurantError } = await supabase
           .from('restaurants')
           .insert({
             name: data.restaurantName,
             owner_id: userId,
-            slug: data.restaurantName
-              .toLowerCase()
-              .replace(/[^a-z0-9\s-]/g, '')
-              .replace(/\s+/g, '-')
-              .replace(/-+/g, '-')
-              .trim(),
+            slug,
+            theme: {
+              primaryColor: '#FF6B2B',
+              secondaryColor: '#1E40AF',
+              backgroundColor: '#050A14',
+              textColor: '#F0F4FF',
+              cardBackground: '#0D1524',
+              fontFamily: 'Plus Jakarta Sans',
+              layout: 'grid',
+              categoryNavPosition: 'top',
+              borderRadius: '12px',
+            },
+            settings: {
+              currency: 'TRY',
+              taxRate: 10,
+              language: 'tr',
+            },
+            plan: 'free',
+            status: 'active',
           })
           .select()
           .single();
@@ -164,6 +208,15 @@ export default function QRMenuKayitPage() {
           });
           return;
         }
+
+        // 2b. Create default table so QR menu works immediately
+        await supabase.from('tables').insert({
+          restaurant_id: restaurant.id,
+          table_number: '1',
+          capacity: 4,
+          position: { x: 0, y: 0 },
+          status: 'empty',
+        });
 
         // 3. Create user_profile record
         const { error: profileError } = await supabase
@@ -349,7 +402,7 @@ export default function QRMenuKayitPage() {
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
-                  placeholder="En az 6 karakter"
+                  placeholder="En az 8 karakter (buyuk harf, kucuk harf, rakam)"
                   autoComplete="new-password"
                   {...register('password')}
                   disabled={isSubmitting}

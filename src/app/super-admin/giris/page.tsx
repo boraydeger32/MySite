@@ -85,9 +85,7 @@ export default function SuperAdminGirisPage() {
 
       if (error) {
         toast.error('Giris basarisiz.', {
-          description: error.message === 'Invalid login credentials'
-            ? 'E-posta veya sifre hatali.'
-            : error.message,
+          description: 'E-posta veya sifre hatali.',
         });
         return;
       }
@@ -111,9 +109,9 @@ export default function SuperAdminGirisPage() {
         description: 'Admin paneline yonlendiriliyorsunuz...',
       });
       router.push('/super-admin/dashboard');
-    } catch (err) {
+    } catch {
       toast.error('Baglanti hatasi.', {
-        description: err instanceof Error ? err.message : 'Sunucuya ulasilamadi. Lutfen tekrar deneyiniz.',
+        description: 'Sunucuya ulasilamadi. Lutfen tekrar deneyiniz.',
       });
     } finally {
       setIsSubmitting(false);

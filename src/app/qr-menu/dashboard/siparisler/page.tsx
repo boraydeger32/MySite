@@ -38,7 +38,8 @@ import type { Order, OrderStatus, Table } from '@/lib/supabase/types';
 // Constants
 // ---------------------------------------------------------------------------
 
-const MOCK_RESTAURANT_ID = 'demo-restaurant-001';
+import { DEMO_RESTAURANT_ID } from '@/lib/constants';
+const MOCK_RESTAURANT_ID = DEMO_RESTAURANT_ID;
 
 const STATUS_CONFIG: Record<
   OrderStatus,
@@ -952,6 +953,7 @@ export default function SiparislerPage() {
   const [viewMode, setViewMode] = useState<ViewMode>('kanban');
   const [activeTab, setActiveTab] = useState<MainTab>('active');
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
+  const [restaurantId, setRestaurantId] = useState<string>(MOCK_RESTAURANT_ID);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const channelRef = useRef<ReturnType<ReturnType<typeof createClient>['channel']> | null>(null);
@@ -976,10 +978,24 @@ export default function SiparislerPage() {
       setIsLoading(true);
       try {
         const supabase = createClient();
+
+        // Fetch restaurant for current user
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) throw new Error('No user');
+
+        const { data: restaurant } = await supabase
+          .from('restaurants')
+          .select('id')
+          .eq('owner_id', user.id)
+          .single();
+
+        if (!restaurant) throw new Error('No restaurant');
+        setRestaurantId(restaurant.id);
+
         const { data, error } = await supabase
           .from('orders')
           .select('*')
-          .eq('restaurant_id', MOCK_RESTAURANT_ID)
+          .eq('restaurant_id', restaurant.id)
           .order('created_at', { ascending: false });
 
         if (error) throw error;
@@ -988,10 +1004,9 @@ export default function SiparislerPage() {
           setIsLoading(false);
           return;
         }
-      } catch {
-        // Fallback to mock data when Supabase is not available
+      } catch (err) {
+        console.error('[Siparisler] Veri yuklenemedi:', err);
       }
-      setOrders(generateMockOrders());
       setIsLoading(false);
     }
 
@@ -1005,19 +1020,18 @@ export default function SiparislerPage() {
     try {
       supabase = createClient();
     } catch {
-      // Supabase not configured - use mock data
       return;
     }
 
     const channel = supabase
-      .channel(`orders-page-${MOCK_RESTAURANT_ID}`)
+      .channel(`orders-page-${restaurantId}`)
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
           table: 'orders',
-          filter: `restaurant_id=eq.${MOCK_RESTAURANT_ID}`,
+          filter: `restaurant_id=eq.${restaurantId}`,
         },
         (payload) => {
           if (payload.eventType === 'INSERT') {
@@ -1042,7 +1056,7 @@ export default function SiparislerPage() {
       supabase.removeChannel(channel);
       channelRef.current = null;
     };
-  }, []);
+  }, [restaurantId]);
 
   // ---- Callbacks ----
   const handleStatusChange = useCallback(
@@ -1214,7 +1228,7 @@ export default function SiparislerPage() {
                     <KDSView
                       orders={activeOrders}
                       tables={tables}
-                      restaurantId={MOCK_RESTAURANT_ID}
+                      restaurantId={restaurantId}
                       onStatusChange={handleStatusChange}
                       onOrdersUpdate={handleOrdersUpdate}
                     />

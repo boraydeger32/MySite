@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 // =============================================================================
 // Customer Cart Store (Zustand)
@@ -70,12 +71,22 @@ function itemTotal(item: CartItem): number {
   return (item.price + modifierTotal) * item.quantity;
 }
 
-export const useCartStore = create<CartStore>((set, get) => ({
+export const useCartStore = create<CartStore>()(
+  persist(
+    (set, get) => ({
   items: [],
   restaurantId: null,
   tableId: null,
 
-  setContext: (restaurantId, tableId) => set({ restaurantId, tableId }),
+  setContext: (restaurantId, tableId) => {
+    const state = get();
+    // Clear cart if restaurant or table changed
+    if (state.restaurantId !== restaurantId || state.tableId !== tableId) {
+      set({ restaurantId, tableId, items: [] });
+    } else {
+      set({ restaurantId, tableId });
+    }
+  },
 
   addItem: (item) =>
     set((state) => ({
@@ -125,4 +136,14 @@ export const useCartStore = create<CartStore>((set, get) => ({
 
   totalAmount: () =>
     get().items.reduce((sum, item) => sum + itemTotal(item), 0),
-}));
+    }),
+    {
+      name: 'qr-menu-cart',
+      partialize: (state) => ({
+        items: state.items,
+        restaurantId: state.restaurantId,
+        tableId: state.tableId,
+      }),
+    }
+  )
+);

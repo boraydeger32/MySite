@@ -2,11 +2,14 @@ import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import type { Restaurant } from '@/lib/supabase/types';
 import type { Metadata } from 'next';
+import { DEMO_RESTAURANT_SLUG, DEMO_RESTAURANT_ID } from '@/lib/constants';
 
-// Required for static export (GitHub Pages)
+// Provide demo slug for static generation; dynamic slugs use dynamicParams
 export function generateStaticParams() {
-  return [{ 'restoran-slug': 'demo' }];
+  return [{ 'restoran-slug': DEMO_RESTAURANT_SLUG }];
 }
+
+export const dynamicParams = true;
 
 // =============================================================================
 // Public Restaurant Landing Page
@@ -46,6 +49,11 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     // Supabase not configured - use fallback
   }
 
+  // Use demo data for the demo slug if not found in DB
+  if (!restaurant && slug === DEMO_RESTAURANT_SLUG) {
+    restaurant = DEMO_RESTAURANT;
+  }
+
   if (!restaurant) {
     return { title: 'Restoran Bulunamadi' };
   }
@@ -66,10 +74,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 // ---------------------------------------------------------------------------
 
 const DEMO_RESTAURANT: Restaurant = {
-  id: 'demo-restaurant-001',
+  id: DEMO_RESTAURANT_ID,
   owner_id: 'demo-owner',
   name: 'Demo Restoran',
-  slug: 'demo-restoran',
+  slug: DEMO_RESTAURANT_SLUG,
   logo_url: null,
   cover_url: null,
   theme: {
@@ -144,11 +152,11 @@ export default async function RestoranPage({ params }: PageProps) {
 
     restaurant = data as Restaurant | null;
   } catch {
-    // Supabase not configured - fall back to demo
+    // Supabase not configured or error - fall back to demo
   }
 
-  // Use demo data for the demo slug
-  if (!restaurant && slug === 'demo-restoran') {
+  // Use demo data for the demo slug if not found in DB
+  if (!restaurant && slug === DEMO_RESTAURANT_SLUG) {
     restaurant = DEMO_RESTAURANT;
   }
 
