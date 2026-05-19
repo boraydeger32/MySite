@@ -8,7 +8,34 @@
 
 # QR Menu SaaS Platform
 
-Restoran ve kafeler icin enterprise-ready QR menu yonetim sistemi. Musterileriniz QR kodu okutarak dijital menuye ulasir, siparis verir ve garson cagirabilir. Siz ise guclue dashboard uzerinden her seyi yonetirsiniz.
+Restoran ve kafeler icin enterprise-ready QR menu yonetim sistemi. Musterileriniz QR kodu okutarak dijital menuye ulasir, siparis verir ve garson cagirabilir. Siz ise guclu dashboard uzerinden her seyi yonetirsiniz.
+
+---
+
+## Ekran Goruntuleri
+
+### Ana Sayfa
+<p align="center">
+  <img src="docs/screenshots/01-homepage.png" alt="Ana Sayfa" width="100%" />
+</p>
+
+### QR Menu Giris & Kayit
+<p align="center">
+  <img src="docs/screenshots/02-login.png" alt="Giris Sayfasi" width="48%" />
+  <img src="docs/screenshots/03-register.png" alt="Kayit Sayfasi" width="48%" />
+</p>
+
+### Restoran Landing & Dijital Menu (Mobil)
+<p align="center">
+  <img src="docs/screenshots/04-restaurant-landing.png" alt="Restoran Landing" width="58%" />
+  <img src="docs/screenshots/07-menu-mobile.png" alt="QR Menu Mobil" width="22%" />
+</p>
+
+### Hizmetler & QR Menu Cozumleri
+<p align="center">
+  <img src="docs/screenshots/05-services.png" alt="Hizmetler" width="48%" />
+  <img src="docs/screenshots/06-qr-service.png" alt="QR Menu Hizmeti" width="48%" />
+</p>
 
 ---
 
